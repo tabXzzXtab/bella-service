@@ -44,8 +44,17 @@ const t = useTranslations(locale);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
 
-    <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
-    <link rel="apple-touch-icon" href={`${base}favicon.svg`} />
+    {
+      /*
+      Favicons are the company mascot cropped to its triangle badge. The full
+      lockup includes an outstretched arm that forces the mark down to an
+      unreadable smudge at 16px, so the tab gets the badge and the header gets
+      the whole thing — which is what the .ico's 16/32/48 entries are for.
+    */
+    }
+    <link rel="icon" href={`${base}favicon.ico`} sizes="32x32" />
+    <link rel="icon" href={`${base}icon.png`} type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href={`${base}apple-touch-icon.png`} />
     <link rel="sitemap" href={`${base}sitemap-index.xml`} />
     <meta name="theme-color" content="#fbfaf8" />
 
