@@ -1,0 +1,191 @@
+---
+import Placeholder from './Placeholder.astro';
+import { processItems } from '../data/process';
+import { pick } from '../i18n/utils';
+import type { Locale } from '../i18n/config';
+
+/**
+ * The process timeline.
+ *
+ * A hairline runs the height of the section with a small dot at every step and
+ * a quiet chip at every milestone. On wide screens the steps alternate either
+ * side of a centred rule; on phones the rule moves to the left edge and every
+ * step stacks beneath it in one column.
+ *
+ * That collapse is the responsive design here — an alternating layout is
+ * unreadable below about 700px, so `side` is ignored under 48rem rather than
+ * squeezed, and text stays left-aligned at phone width either way.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+let stepNumber = 0;
+const items = processItems.map((item) => {
+  if (item.kind === 'step') stepNumber += 1;
+  return { item, number: item.kind === 'step' ? stepNumber : null };
+});
+---
+
+<ol class="tl">
+  {
+    items.map(({ item, number }) =>
+      item.kind === 'milestone' ? (
+        <li class="tl-milestone reveal">
+          <span class="tl-chip">{pick(item.label, locale)}</span>
+        </li>
+      ) : (
+        <li class:list={['tl-step', `tl-step--${item.side}`, 'reveal']}>
+          <span class="tl-dot" aria-hidden="true" />
+
+          <div class="tl-body">
+            <p class="tl-num">{String(number).padStart(2, '0')}</p>
+            <h3 class="tl-title">{pick(item.title, locale)}</h3>
+            {pick(item.body, locale).map((paragraph) => (
+              <p class="tl-text">{paragraph}</p>
+            ))}
+          </div>
+
+          {item.media && (
+            <div class="tl-media">
+              <Placeholder id={item.media} locale={locale} />
+            </div>
+          )}
+        </li>
+      ),
+    )
+  }
+</ol>
+
+<style>
+  .tl {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* A hairline, not a 2px bar. */
+  .tl::before {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: 3px;
+    width: 1px;
+    background-color: var(--line-strong);
+  }
+
+  .tl-step {
+    position: relative;
+    display: grid;
+    gap: 1.5rem;
+    padding-left: 2rem;
+    padding-block: 0 3rem;
+  }
+
+  .tl-dot {
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--accent);
+  }
+
+  .tl-num {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 0.5rem;
+  }
+
+  .tl-title {
+    margin-bottom: 0.75rem;
+  }
+
+  .tl-text {
+    color: var(--ink-soft);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    max-width: 40ch;
+    margin-bottom: 0.6rem;
+  }
+
+  .tl-text:last-child {
+    margin-bottom: 0;
+  }
+
+  .tl-milestone {
+    position: relative;
+    display: flex;
+    padding-block: 0 3rem;
+  }
+
+  .tl-chip {
+    /* Painted in the page ground so the rule appears to break behind it. */
+    background-color: var(--bg);
+    padding: 0.35rem 0.85rem 0.35rem 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink-faint);
+  }
+
+  /* --- Wide screens: alternate across a centred rule ---------------------- */
+  @media (width >= 48rem) {
+    .tl::before {
+      left: 50%;
+      translate: -0.5px 0;
+    }
+
+    .tl-step {
+      grid-template-columns: 1fr 1fr;
+      column-gap: clamp(3rem, 7vw, 6rem);
+      align-items: start;
+      padding-left: 0;
+      padding-block: 0 clamp(4rem, 8vw, 7rem);
+    }
+
+    .tl-dot {
+      left: 50%;
+      translate: -50% 0;
+      top: 0.55rem;
+    }
+
+    .tl-step--left .tl-body {
+      grid-column: 1;
+      text-align: right;
+    }
+
+    .tl-step--left .tl-text {
+      margin-left: auto;
+    }
+
+    .tl-step--left .tl-media {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .tl-step--right .tl-body {
+      grid-column: 2;
+    }
+
+    .tl-step--right .tl-media {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .tl-milestone {
+      justify-content: center;
+      padding-block: 0 clamp(4rem, 8vw, 7rem);
+    }
+
+    .tl-chip {
+      padding-inline: 1rem;
+    }
+  }
+</style>

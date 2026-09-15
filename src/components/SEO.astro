@@ -1,0 +1,143 @@
+---
+import { LOCALES, LOCALE_TAGS, DEFAULT_LOCALE, type Locale } from '../i18n/config';
+import { alternatePath, pick } from '../i18n/utils';
+import { formatAddress, site } from '../data/site';
+import { services } from '../data/services';
+
+/**
+ * Everything that goes in <head> for search engines and link previews.
+ *
+ * Three things worth understanding here:
+ *
+ *  - hreflang. Each page declares itself and its counterpart in the other
+ *    language, so Google serves the Swedish page to Swedish searchers instead
+ *    of treating the two as duplicates competing with each other.
+ *  - canonical. Built from `Astro.site`, so it always names the real domain
+ *    even while you are looking at localhost.
+ *  - structured data. Typed as RoofingContractor rather than the generic
+ *    LocalBusiness, because that is what this company is — and it is what
+ *    lets a search result show the trade, the service area and the phone
+ *    number without anyone clicking through.
+ */
+interface Props {
+  title: string;
+  description: string;
+  locale: Locale;
+  /** Path to a share image inside /public. Falls back to the site default. */
+  image?: string;
+  /** Keep this page out of search results (thank-you pages, staging). */
+  noindex?: boolean;
+}
+
+const { title, description, locale, image = site.ogImage, noindex = false } = Astro.props;
+
+// Astro.site comes from `site:` in astro.config.mjs. The fallback keeps the dev
+// server working if it is ever unset; it should never be hit in a build.
+const origin = Astro.site ?? new URL('http://localhost:4321');
+
+const canonical = new URL(Astro.url.pathname, origin);
+// `image` is a path inside /public, so it needs the deployment base before it
+// is resolved against the origin — otherwise the share card 404s on a
+// sub-path deployment and every link preview comes out blank.
+const ogImageUrl = new URL(`${import.meta.env.BASE_URL}${image.replace(/^\//, '')}`, origin);
+
+// The title already ends with the company name on the start page; elsewhere we
+// append it, so tabs and search results stay identifiable.
+const fullTitle = title.includes(site.name) ? title : `${title} | ${site.name}`;
+
+const alternates = LOCALES.map((code) => ({
+  code,
+  tag: LOCALE_TAGS[code],
+  href: new URL(alternatePath(Astro.url.pathname, code), origin).href,
+}));
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'RoofingContractor',
+  '@id': `${origin.href}#organization`,
+  name: site.name,
+  legalName: site.legalName,
+  description,
+  url: origin.href,
+  telephone: site.phone.href,
+  email: site.email,
+  image: ogImageUrl.href,
+  slogan: pick(site.tagline, locale),
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: site.address.street,
+    postalCode: site.address.postalCode,
+    addressLocality: site.address.city,
+    addressRegion: 'Skåne',
+    addressCountry: site.address.country,
+  },
+  areaServed: site.serviceAreaPlaces.map((area) => ({ '@type': 'City', name: area })),
+  identifier: site.orgNumber,
+  vatID: site.vatNumber,
+  foundingDate: String(site.foundedYear),
+  openingHoursSpecification: {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: site.openingHoursSpec.days,
+    opens: site.openingHoursSpec.opens,
+    closes: site.openingHoursSpec.closes,
+  },
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: pick({ sv: 'Tjänster', en: 'Services' }, locale),
+    itemListElement: services.map((service) => ({
+      '@type': 'Offer',
+      itemOffered: {
+        '@type': 'Service',
+        name: pick(service.title, locale),
+        description: pick(service.summary, locale),
+      },
+      ...(service.price.kind === 'from'
+        ? {
+            priceSpecification: {
+              '@type': 'UnitPriceSpecification',
+              price: service.price.amount,
+              priceCurrency: 'SEK',
+              unitText: service.price.unit === 'sqm' ? 'm2' : 'panel',
+              // "från" pricing — say so, rather than publish it as firm.
+              valueAddedTaxIncluded: false,
+            },
+          }
+        : { price: 0, priceCurrency: 'SEK' }),
+    })),
+  },
+};
+---
+
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical.href} />
+
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+
+{/* Language alternates, plus the default a language-less visitor should get. */}
+{alternates.map(({ tag, href }) => <link rel="alternate" hreflang={tag} href={href} />)}
+<link
+  rel="alternate"
+  hreflang="x-default"
+  href={alternates.find((alternate) => alternate.code === DEFAULT_LOCALE)?.href}
+/>
+
+{/* Open Graph — Facebook, LinkedIn, Slack, iMessage. */}
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={site.name} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical.href} />
+<meta property="og:image" content={ogImageUrl.href} />
+<meta property="og:locale" content={LOCALE_TAGS[locale].replace('-', '_')} />
+
+{/* Twitter/X. */}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImageUrl.href} />
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify(structuredData)} />
+
+<meta name="geo.placename" content={site.address.city} />
+<meta name="business:contact_data:street_address" content={formatAddress(site.address)} />

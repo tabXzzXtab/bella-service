@@ -1,0 +1,193 @@
+---
+import Placeholder from './Placeholder.astro';
+import { useTranslations } from '../i18n/utils';
+import type { Locale } from '../i18n/config';
+
+/**
+ * The before/after wipe.
+ *
+ * The single most persuasive thing this company owns: a moss-blackened roof
+ * turning back into clean terracotta. It is the product and the proof at once,
+ * so it gets its own component rather than being a gallery item.
+ *
+ * Built on a real <input type="range">, which means the control is keyboard
+ * operable, announced correctly, and draggable on touch without a line of
+ * JavaScript for the basics. The script only mirrors the value into the custom
+ * property that drives the clip.
+ */
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+
+const { locale, class: className = '' } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<div class={`ba ${className}`} data-before-after style="--ba-pos: 50%">
+  <div class="ba-stage">
+    {/* "After" is the base layer, fully visible underneath. */}
+    <Placeholder id="heroRoof" locale={locale} radius="none" />
+
+    {/* "Before" is clipped from the right by the handle position. */}
+    <div class="ba-clip" aria-hidden="true">
+      <Placeholder id="heroRoofBefore" locale={locale} radius="none" />
+    </div>
+
+    <span class="ba-tag ba-tag--before">{t('home.transformation.before')}</span>
+    <span class="ba-tag ba-tag--after">{t('home.transformation.after')}</span>
+
+    <div class="ba-line" aria-hidden="true"><span class="ba-knob"></span></div>
+
+    <input
+      type="range"
+      class="ba-range"
+      min="0"
+      max="100"
+      value="50"
+      step="1"
+      data-ba-range
+      aria-label={t('home.transformation.handle')}
+    />
+  </div>
+</div>
+
+<style>
+  .ba-stage {
+    position: relative;
+    isolation: isolate;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .ba-clip {
+    position: absolute;
+    inset: 0;
+    clip-path: inset(0 calc(100% - var(--ba-pos)) 0 0);
+  }
+
+  .ba-clip :global(.media) {
+    height: 100%;
+  }
+
+  .ba-tag {
+    position: absolute;
+    top: 1rem;
+    z-index: 3;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border-radius: var(--radius-pill);
+    background-color: rgb(255 255 255 / 0.9);
+    backdrop-filter: blur(8px);
+    color: var(--ink);
+    pointer-events: none;
+  }
+
+  .ba-tag--before {
+    left: 1rem;
+  }
+
+  .ba-tag--after {
+    right: 1rem;
+  }
+
+  .ba-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--ba-pos);
+    z-index: 4;
+    width: 2px;
+    background-color: rgb(255 255 255 / 0.9);
+    translate: -1px 0;
+    pointer-events: none;
+  }
+
+  .ba-knob {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: #fff;
+    box-shadow: 0 2px 12px rgb(22 25 31 / 0.25);
+  }
+
+  /* Two small chevrons, drawn rather than iconed. */
+  .ba-knob::before,
+  .ba-knob::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    border-top: 1.5px solid var(--ink);
+    border-right: 1.5px solid var(--ink);
+  }
+
+  .ba-knob::before {
+    left: 12px;
+    translate: 0 -50%;
+    rotate: -135deg;
+  }
+
+  .ba-knob::after {
+    right: 12px;
+    translate: 0 -50%;
+    rotate: 45deg;
+  }
+
+  /* The range sits invisibly over the stage and does the actual work. */
+  .ba-range {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: ew-resize;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+  }
+
+  .ba-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 3rem;
+    height: 100%;
+  }
+
+  .ba-range::-moz-range-thumb {
+    width: 3rem;
+    height: 100%;
+    border: 0;
+    opacity: 0;
+  }
+
+  /* The input itself is transparent, so the focus ring has to land on
+     something visible — show it on the knob instead. */
+  .ba-range:focus-visible {
+    outline: none;
+  }
+
+  .ba-range:focus-visible ~ .ba-line .ba-knob {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-before-after]')) {
+    const range = root.querySelector<HTMLInputElement>('[data-ba-range]');
+    if (!range) continue;
+
+    const apply = () => root.style.setProperty('--ba-pos', `${range.value}%`);
+    range.addEventListener('input', apply);
+    // Re-apply on load in case the browser restored a previous value.
+    apply();
+  }
+</script>

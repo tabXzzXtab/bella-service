@@ -1,0 +1,62 @@
+---
+import { Image } from 'astro:assets';
+import logo from '../assets/logo.png';
+import { site } from '../data/site';
+
+/**
+ * The wordmark: the company's mascot beside the company name.
+ *
+ * The mark itself already contains the words "Bella Service AB", but at header
+ * size that lettering is far too small to read — so the name is set alongside
+ * it in the site face. The mascot supplies recognition, the type supplies
+ * legibility.
+ *
+ * Imported from src/assets rather than referenced out of /public so Astro's
+ * image pipeline handles it: the 238KB source PNG is emitted as a correctly
+ * sized, optimised file with intrinsic width/height attributes, which also
+ * stops the header shifting while it loads.
+ *
+ * The image is decorative here (alt="") because the visible name beside it and
+ * the link's own aria-label already announce the company. Marking it up would
+ * make a screen reader say "Bella Service" three times.
+ */
+interface Props {
+  class?: string;
+  /** Slightly larger treatment, used in the footer. */
+  size?: 'sm' | 'md';
+}
+
+const { class: className = '', size = 'sm' } = Astro.props;
+
+// The source is 600×416 (aspect 1.442). The mascot is a detailed illustration,
+// so it needs real height to read as anything but a coloured blob — but the
+// header is deliberately quiet, so it stops well short of filling it.
+const height = size === 'md' ? 58 : 44;
+const width = Math.round(height * 1.442);
+---
+
+<span class:list={['logo', className]}>
+  <Image src={logo} alt="" width={width} height={height} densities={[1, 2]} />
+  <span class="logo-name">{site.name}</span>
+</span>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .logo :global(img) {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .logo-name {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+</style>

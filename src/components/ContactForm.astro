@@ -1,0 +1,426 @@
+---
+import Button from './Button.astro';
+import { services } from '../data/services';
+import { site } from '../data/site';
+import { pick, useTranslations } from '../i18n/utils';
+import { ui } from '../i18n/ui';
+import type { Locale } from '../i18n/config';
+
+/**
+ * The quote form.
+ *
+ * Posts to /api/kontakt, which returns translation *keys* rather than
+ * sentences — so the map below is what turns a server response into Swedish or
+ * English. Only the keys the endpoint can actually return are sent to the
+ * client; there is no reason to ship the whole dictionary.
+ *
+ * Without JavaScript the form cannot submit, because the endpoint answers in
+ * JSON and showing a visitor raw JSON is worse than not offering the form. The
+ * <noscript> block gives them the two things that always work: a phone number
+ * and an email address.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const messages = {
+  'contact.form.error.name': ui[locale]['contact.form.error.name'],
+  'contact.form.error.email': ui[locale]['contact.form.error.email'],
+  'contact.form.error.phone': ui[locale]['contact.form.error.phone'],
+  'contact.form.error.message': ui[locale]['contact.form.error.message'],
+  'contact.form.error.consent': ui[locale]['contact.form.error.consent'],
+  'contact.form.error.rateLimit': ui[locale]['contact.form.error.rateLimit'],
+  'contact.form.error.body': ui[locale]['contact.form.error.body'],
+};
+
+const labels = { submit: t('contact.form.submit'), sending: t('contact.form.sending') };
+
+/**
+ * Optional n8n (or any) webhook the form posts to directly from the browser.
+ *
+ * Set PUBLIC_CONTACT_WEBHOOK and the form sends JSON straight there instead of
+ * to /api/kontakt. That is what makes the form work on a static host such as
+ * GitHub Pages, which cannot run the SMTP endpoint at all.
+ *
+ * Leave it unset and nothing changes: the form posts to /api/kontakt exactly
+ * as before. The two paths are alternatives, not a chain.
+ *
+ * ⚠ Two things to know before pointing this at a live workflow:
+ *   - The URL ships in the page source. Anyone can read it and post to it, so
+ *     the workflow on the other end must do its own validation and rate
+ *     limiting — the server-side honeypot and limiter in src/lib/contact.ts
+ *     are NOT in the path when the webhook is used.
+ *   - The receiving endpoint must send CORS headers allowing this origin, or
+ *     the browser will block the request before n8n ever sees it.
+ */
+const webhookUrl = import.meta.env.PUBLIC_CONTACT_WEBHOOK ?? '';
+---
+
+<form
+  class="cf"
+  data-contact-form
+  novalidate
+  data-success-title={t('contact.form.success.title')}
+  data-success-body={t('contact.form.success.body')}
+>
+  <input type="hidden" name="locale" value={locale} />
+  <input type="hidden" name="rendered_at" data-rendered-at value="" />
+
+  {
+    /*
+    Honeypot: hidden from sight AND from assistive technology, and out of the
+    tab order, so no real visitor can reach it — but a form-filling script
+    will happily complete it.
+  */
+  }
+  <div class="cf-honeypot" aria-hidden="true">
+    <label for="company">Företag</label>
+    <input type="text" id="company" name="company" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <div class="cf-grid">
+    <div class="field">
+      <label for="name">{t('contact.form.name')}</label>
+      <input
+        type="text"
+        id="name"
+        name="name"
+        required
+        autocomplete="name"
+        aria-describedby="err-name"
+      />
+      <p class="field-error" id="err-name" data-error-for="name"></p>
+    </div>
+
+    <div class="field">
+      <label for="phone">{t('contact.form.phone')}</label>
+      <input
+        type="tel"
+        id="phone"
+        name="phone"
+        required
+        autocomplete="tel"
+        aria-describedby="err-phone"
+      />
+      <p class="field-error" id="err-phone" data-error-for="phone"></p>
+    </div>
+
+    <div class="field field--wide">
+      <label for="email">{t('contact.form.email')}</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        required
+        autocomplete="email"
+        aria-describedby="err-email"
+      />
+      <p class="field-error" id="err-email" data-error-for="email"></p>
+    </div>
+
+    <div class="field field--wide">
+      <label for="propertyAddress">
+        {t('contact.form.propertyAddress')}
+        <span class="field-optional">({t('contact.form.optional')})</span>
+      </label>
+      <input
+        type="text"
+        id="propertyAddress"
+        name="propertyAddress"
+        autocomplete="street-address"
+      />
+    </div>
+
+    <div class="field field--wide">
+      <label for="subject">{t('contact.form.service')}</label>
+      <select id="subject" name="subject">
+        <option value="">{t('contact.form.servicePlaceholder')}</option>
+        {
+          services.map((service) => (
+            <option value={pick(service.title, locale)}>{pick(service.title, locale)}</option>
+          ))
+        }
+      </select>
+    </div>
+
+    <div class="field field--wide">
+      <label for="message">{t('contact.form.message')}</label>
+      <textarea
+        id="message"
+        name="message"
+        rows="5"
+        required
+        placeholder={t('contact.form.messagePlaceholder')}
+        aria-describedby="err-message"></textarea>
+      <p class="field-error" id="err-message" data-error-for="message"></p>
+    </div>
+
+    <div class="field field--wide">
+      <label class="cf-consent">
+        <input type="checkbox" name="consent" required aria-describedby="err-consent" />
+        <span>{t('contact.form.consent')}</span>
+      </label>
+      <p class="field-error" id="err-consent" data-error-for="consent"></p>
+    </div>
+  </div>
+
+  <p class="cf-status" data-form-status role="status" aria-live="polite"></p>
+
+  <Button type="submit" variant="accent" size="lg" data-submit>{labels.submit}</Button>
+
+  <noscript>
+    <p class="cf-noscript">
+      {t('contact.form.noscript')}<br />
+      <a href={`tel:${site.phone.href}`}>{site.phone.display}</a> ·
+      <a href={`mailto:${site.email}`}>{site.email}</a>
+    </p>
+  </noscript>
+</form>
+
+<script is:inline define:vars={{ messages, labels, webhookUrl }}>
+  (function () {
+    const form = document.querySelector('[data-contact-form]');
+    if (!form) return;
+
+    const submit = form.querySelector('[data-submit]');
+    const status = form.querySelector('[data-form-status]');
+    const renderedAt = form.querySelector('[data-rendered-at]');
+
+    // Stamped in the browser, not at build time: these pages are static, so a
+    // build-time value would be hours old and wave every bot through.
+    if (renderedAt) renderedAt.value = String(Date.now());
+
+    function clearErrors() {
+      form.querySelectorAll('[data-error-for]').forEach((n) => (n.textContent = ''));
+      form
+        .querySelectorAll('[aria-invalid="true"]')
+        .forEach((n) => n.removeAttribute('aria-invalid'));
+      status.textContent = '';
+      status.className = 'cf-status';
+    }
+
+    function showErrors(errors) {
+      let first = null;
+
+      for (const [field, key] of Object.entries(errors ?? {})) {
+        const slot = form.querySelector(`[data-error-for="${field}"]`);
+        const input = form.elements.namedItem(field);
+
+        if (slot) slot.textContent = messages[key] ?? key;
+        if (input && 'setAttribute' in input) {
+          input.setAttribute('aria-invalid', 'true');
+          if (!first) first = input;
+        }
+
+        // `form` is the endpoint's key for a failure belonging to no single
+        // field — a rate limit, or SMTP being down.
+        if (field === 'form') {
+          status.textContent = messages[key] ?? key;
+          status.className = 'cf-status cf-status--error';
+        }
+      }
+
+      // Send focus to the first thing that needs fixing, so a keyboard or
+      // screen-reader user is not left hunting for it.
+      if (first) first.focus();
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearErrors();
+
+      submit.disabled = true;
+      submit.textContent = labels.sending;
+
+      try {
+        const data = new FormData(form);
+        let response;
+        let payload;
+
+        if (webhookUrl) {
+          // Static-host path: straight to the webhook as JSON, which is the
+          // shape n8n's Webhook node expects. The honeypot field travels with
+          // it so the workflow can drop obvious bots itself.
+          response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(Object.fromEntries(data.entries())),
+          });
+          // A webhook returns whatever the workflow returns — usually not our
+          // {ok:true} envelope — so treat any 2xx as delivered.
+          payload = response.ok ? { ok: true } : null;
+        } else {
+          response = await fetch('/api/kontakt', {
+            method: 'POST',
+            body: data,
+            headers: { accept: 'application/json' },
+          });
+          payload = await response.json().catch(() => null);
+        }
+
+        if (response.ok && payload && payload.ok) {
+          // Replace the form outright — leaving a filled-in form on screen
+          // invites a second identical enquiry.
+          const done = document.createElement('div');
+          done.className = 'cf-done';
+          done.setAttribute('role', 'status');
+
+          const heading = document.createElement('h2');
+          heading.textContent = form.dataset.successTitle ?? '';
+
+          const body = document.createElement('p');
+          body.className = 'muted';
+          body.textContent = form.dataset.successBody ?? '';
+
+          done.append(heading, body);
+          form.replaceWith(done);
+          done.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          return;
+        }
+
+        showErrors(
+          payload && payload.errors ? payload.errors : { form: 'contact.form.error.body' },
+        );
+      } catch {
+        // Offline, DNS failure, endpoint unreachable. Say so plainly and leave
+        // the phone number on the page as the way through.
+        showErrors({ form: 'contact.form.error.body' });
+      } finally {
+        submit.disabled = false;
+        submit.textContent = labels.submit;
+      }
+    });
+  })();
+</script>
+
+<style>
+  .cf {
+    display: grid;
+    gap: 1.75rem;
+    justify-items: start;
+  }
+
+  .cf-grid {
+    display: grid;
+    gap: 1.1rem;
+    width: 100%;
+  }
+
+  @media (width >= 34rem) {
+    .cf-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .field--wide {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .field {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .field label {
+    font-size: 0.875rem;
+    font-weight: 450;
+    color: var(--ink-soft);
+  }
+
+  .field-optional {
+    color: var(--ink-faint);
+    font-weight: 400;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    padding: 0.8rem 0.95rem;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--ink);
+    background-color: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--dur-fast) var(--ease);
+  }
+
+  .field input:hover,
+  .field select:hover,
+  .field textarea:hover {
+    border-color: var(--ink-faint);
+  }
+
+  .field textarea {
+    resize: vertical;
+    min-height: 8rem;
+    line-height: 1.55;
+  }
+
+  .field [aria-invalid='true'] {
+    border-color: #c0392b;
+  }
+
+  .field-error:empty {
+    display: none;
+  }
+
+  .field-error {
+    font-size: 0.8125rem;
+    color: #c0392b;
+  }
+
+  .cf-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+
+  .cf-consent input {
+    margin-top: 0.25rem;
+    width: 1.05rem;
+    height: 1.05rem;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+  }
+
+  .cf-status:empty {
+    display: none;
+  }
+
+  .cf-status {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9375rem;
+  }
+
+  .cf-status--error {
+    background-color: #fdecea;
+    color: #a5311f;
+  }
+
+  .cf-noscript {
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+
+  /* Off-screen rather than display:none, because some bots skip anything that
+     is not rendered. */
+  .cf-honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+</style>

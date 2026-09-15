@@ -1,0 +1,24 @@
+---
+import Base from '../layouts/Base.astro';
+import Button from '../components/Button.astro';
+import Section from '../components/Section.astro';
+import { DEFAULT_LOCALE } from '../i18n/config';
+import { path, useTranslations } from '../i18n/utils';
+
+/**
+ * Not found.
+ *
+ * A 404 has no language of its own — the URL that produced it is by definition
+ * not a page — so it answers in Swedish, the site's primary language.
+ */
+const locale = DEFAULT_LOCALE;
+const t = useTranslations(locale);
+---
+
+<Base title={t('notFound.title')} description={t('notFound.lead')} noindex>
+  <Section level={1} title={t('notFound.title')} lead={t('notFound.lead')} noReveal>
+    <Button href={path('home', locale)} variant="primary" size="lg">
+      {t('notFound.action')}
+    </Button>
+  </Section>
+</Base>

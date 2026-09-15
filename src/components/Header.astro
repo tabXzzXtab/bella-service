@@ -1,0 +1,299 @@
+---
+import Button from './Button.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import Logo from './Logo.astro';
+import { NAV_ORDER, type Locale, type RouteKey } from '../i18n/config';
+import type { UIKey } from '../i18n/ui';
+import { path, routeKeyFromPath, useTranslations } from '../i18n/utils';
+
+/**
+ * Site header.
+ *
+ * Sticky, on a blurred translucent ground, with a hairline that only appears
+ * once the page has scrolled — so at the top of a page the header dissolves
+ * into the hero instead of sitting in a box on top of it.
+ *
+ * Nav labels are mapped explicitly rather than built as `nav.${key}`, so
+ * adding a route without a label is a build error, not a blank menu item.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const NAV_LABEL: Record<RouteKey, UIKey> = {
+  home: 'nav.home',
+  services: 'nav.services',
+  process: 'nav.process',
+  contact: 'nav.contact',
+};
+
+const current = routeKeyFromPath(Astro.url.pathname);
+---
+
+<header class="hdr" data-header>
+  <div class="container-page hdr-inner">
+    <a href={path('home', locale)} class="hdr-brand" aria-label={t('nav.home')}>
+      <Logo />
+    </a>
+
+    <nav class="hdr-nav" aria-label={t('nav.menu')}>
+      {
+        NAV_ORDER.map((key) => (
+          <a href={path(key, locale)} aria-current={current === key ? 'page' : undefined}>
+            {t(NAV_LABEL[key])}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="hdr-actions">
+      <LanguageSwitcher locale={locale} />
+      <Button href={path('contact', locale)} variant="primary" size="md">
+        {t('common.bookInspection')}
+      </Button>
+    </div>
+
+    <button
+      type="button"
+      class="hdr-toggle"
+      data-menu-toggle
+      aria-expanded="false"
+      aria-controls="site-menu"
+      aria-label={t('nav.openMenu')}
+      data-close-label={t('nav.closeMenu')}
+    >
+      <span class="hdr-toggle-bars" aria-hidden="true"><i></i><i></i></span>
+    </button>
+  </div>
+
+  <div class="hdr-panel" id="site-menu" data-menu-panel hidden>
+    <div class="container-page">
+      <nav class="hdr-panel-nav" aria-label={t('nav.menu')}>
+        {
+          NAV_ORDER.map((key) => (
+            <a href={path(key, locale)} aria-current={current === key ? 'page' : undefined}>
+              {t(NAV_LABEL[key])}
+            </a>
+          ))
+        }
+      </nav>
+      <div class="hdr-panel-foot">
+        <LanguageSwitcher locale={locale} />
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+  .hdr {
+    position: sticky;
+    top: 0;
+    z-index: 80;
+    background-color: rgb(251 250 248 / 0.78);
+    backdrop-filter: blur(14px) saturate(160%);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur) var(--ease);
+  }
+
+  /* The rule appears only once there is content behind the header. */
+  .hdr[data-scrolled] {
+    border-bottom-color: var(--line);
+  }
+
+  .hdr-inner {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    min-height: 4.25rem;
+  }
+
+  .hdr-brand {
+    text-decoration: none;
+    margin-inline-end: auto;
+  }
+
+  .hdr-nav {
+    display: none;
+    align-items: center;
+    gap: 1.75rem;
+  }
+
+  .hdr-nav a {
+    position: relative;
+    font-size: 0.9375rem;
+    font-weight: 450;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    color: var(--ink-soft);
+    transition: color var(--dur-fast) var(--ease);
+  }
+
+  .hdr-nav a:hover {
+    color: var(--ink);
+  }
+
+  .hdr-nav a[aria-current='page'] {
+    color: var(--ink);
+  }
+
+  /* A small dot rather than an underline — quieter, and it does not shift
+     the baseline of the row. */
+  .hdr-nav a[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -0.5rem;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    translate: -50% 0;
+  }
+
+  .hdr-actions {
+    display: none;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  @media (width >= 60rem) {
+    .hdr-nav,
+    .hdr-actions {
+      display: flex;
+    }
+  }
+
+  /* --- Menu toggle -------------------------------------------------------- */
+  .hdr-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-inline-end: -0.5rem;
+    background: none;
+    border: 0;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .hdr-toggle-bars {
+    display: grid;
+    gap: 5px;
+    width: 20px;
+  }
+
+  .hdr-toggle-bars i {
+    display: block;
+    height: 1.5px;
+    background-color: currentColor;
+    border-radius: 2px;
+    transition: transform var(--dur) var(--ease);
+  }
+
+  .hdr-toggle[aria-expanded='true'] .hdr-toggle-bars i:first-child {
+    transform: translateY(3.25px) rotate(45deg);
+  }
+
+  .hdr-toggle[aria-expanded='true'] .hdr-toggle-bars i:last-child {
+    transform: translateY(-3.25px) rotate(-45deg);
+  }
+
+  /* Declared after .hdr-toggle's base rule on purpose: both selectors have the
+     same specificity, so whichever comes last wins. With this above the base
+     rule the toggle stayed visible on desktop beside the full nav. */
+  @media (width >= 60rem) {
+    .hdr-toggle {
+      display: none;
+    }
+  }
+
+  /* --- Mobile panel ------------------------------------------------------- */
+  .hdr-panel {
+    border-top: 1px solid var(--line);
+    padding-block: 1.5rem 2rem;
+    background-color: var(--bg);
+  }
+
+  .hdr-panel[hidden] {
+    display: none !important;
+  }
+
+  @media (width >= 60rem) {
+    .hdr-panel {
+      display: none !important;
+    }
+  }
+
+  .hdr-panel-nav {
+    display: grid;
+  }
+
+  .hdr-panel-nav a {
+    padding-block: 0.9rem;
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    text-decoration: none;
+    color: var(--ink);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .hdr-panel-nav a[aria-current='page'] {
+    color: var(--accent-ink);
+  }
+
+  .hdr-panel-foot {
+    margin-top: 1.5rem;
+  }
+</style>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-header]');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const panel = document.querySelector<HTMLElement>('[data-menu-panel]');
+
+  if (toggle && panel) {
+    const openLabel = toggle.getAttribute('aria-label') ?? '';
+
+    const setOpen = (open: boolean) => {
+      panel.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+      // The label must describe what the button will do next, not what it
+      // just did, or a screen reader announces the wrong action.
+      toggle.setAttribute('aria-label', open ? (toggle.dataset.closeLabel ?? '') : openLabel);
+    };
+
+    toggle.addEventListener('click', () => setOpen(Boolean(panel.hidden)));
+
+    // A resize past the desktop breakpoint would leave the panel orphaned open.
+    window.matchMedia('(width >= 60rem)').addEventListener('change', (event) => {
+      if (event.matches) setOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !panel.hidden) {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+  }
+
+  if (header) {
+    // Toggles the header's hairline. Passive because it never preventDefaults,
+    // and guarded so it only touches the DOM when the state actually changes.
+    let scrolled = false;
+    const sync = () => {
+      const next = window.scrollY > 8;
+      if (next === scrolled) return;
+      scrolled = next;
+      header.toggleAttribute('data-scrolled', next);
+    };
+
+    sync();
+    window.addEventListener('scroll', sync, { passive: true });
+  }
+</script>

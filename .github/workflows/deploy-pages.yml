@@ -1,0 +1,76 @@
+name: Deploy to GitHub Pages
+
+# Preview deploy for the Bella Service site.
+#
+# ⚠ GitHub Pages serves static files only, so the contact endpoint
+# (src/pages/api/kontakt.ts, prerender = false) does NOT exist on this
+# deployment. Submitting the form here fails unless PUBLIC_CONTACT_WEBHOOK is
+# set below, in which case the browser posts straight to that webhook instead.
+#
+# The build still runs the Node adapter, which emits every prerendered page to
+# dist/client — that directory is what gets published. dist/server is ignored.
+
+on:
+  push:
+    branches: [main]
+  # Lets you re-deploy from the Actions tab without pushing a commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time. `cancel-in-progress: false` so a run that is already
+# publishing is allowed to finish rather than leaving Pages half-updated.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve Pages URL
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Build
+        env:
+          # A project repo is served from https://<user>.github.io/<repo>/, so
+          # the site needs to know both halves: the origin for canonical URLs
+          # and hreflang, and the sub-path for every internal link.
+          SITE_URL: ${{ steps.pages.outputs.origin }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+          # Optional. Set this as a repository variable (Settings → Secrets and
+          # variables → Actions → Variables) to point the form at an n8n
+          # webhook. Left empty the form has nowhere to post on Pages.
+          PUBLIC_CONTACT_WEBHOOK: ${{ vars.PUBLIC_CONTACT_WEBHOOK }}
+        run: npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Only the static half. dist/server is the Node adapter's output and
+          # has no meaning on Pages.
+          path: dist/client
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

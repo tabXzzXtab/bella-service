@@ -1,0 +1,46 @@
+---
+import { LOCALE_TAGS, type Locale } from '../i18n/config';
+import { alternatePath, otherLocale, useTranslations } from '../i18n/utils';
+
+/**
+ * Swaps to the other language, landing on the same page rather than dumping
+ * the visitor on the start page — `alternatePath` handles the slug lookup.
+ *
+ * A plain text link. Swedish is the primary language and English is one tap
+ * away; that does not warrant a bordered pill in the header.
+ */
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+
+const { locale, class: className = '' } = Astro.props;
+
+const target = otherLocale(locale);
+const t = useTranslations(locale);
+---
+
+<a
+  href={alternatePath(Astro.url.pathname, target)}
+  class={`lang ${className}`}
+  hreflang={LOCALE_TAGS[target]}
+  lang={LOCALE_TAGS[target]}
+>
+  {t('nav.switchLanguage')}
+</a>
+
+<style>
+  .lang {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    text-decoration: none;
+    letter-spacing: -0.008em;
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease);
+  }
+
+  .lang:hover {
+    color: var(--ink);
+  }
+</style>

@@ -1,0 +1,95 @@
+---
+/**
+ * A page section: vertical rhythm, page gutter, optional heading block.
+ *
+ * Every band of content on the site goes through this, which is why the
+ * spacing and the left text edge line up from page to page.
+ *
+ * The heading block is deliberately plain — a small sentence-case label, a
+ * light heading, a lead at a short measure. No rules, no ornaments, no
+ * decoration hanging off it.
+ */
+interface Props {
+  /** Anchor target, e.g. `#tjanster`. */
+  id?: string;
+  title?: string;
+  /** Small label above the title. Sentence case. */
+  label?: string;
+  lead?: string;
+  /** Heading level. Only the page's single <h1> should be 1. */
+  level?: 1 | 2;
+  tone?: 'default' | 'sunk';
+  align?: 'left' | 'center';
+  tight?: boolean;
+  class?: string;
+  /** Skip the scroll reveal — used where content is already in view. */
+  noReveal?: boolean;
+}
+
+const {
+  id,
+  title,
+  label,
+  lead,
+  level = 2,
+  tone = 'default',
+  align = 'left',
+  tight = false,
+  class: className = '',
+  noReveal = false,
+} = Astro.props;
+
+const sectionClasses = [
+  'section',
+  tight && 'section--tight',
+  tone === 'sunk' && 'section--sunk',
+  className,
+]
+  .filter(Boolean)
+  .join(' ');
+
+const headClasses = [
+  'section-head',
+  !noReveal && 'reveal',
+  align === 'center' && 'section-head--center',
+]
+  .filter(Boolean)
+  .join(' ');
+
+const hasHead = Boolean(label || title || lead);
+---
+
+<section id={id} class={sectionClasses}>
+  <div class="container-page">
+    {
+      hasHead && (
+        <header class={headClasses}>
+          {label && <p class="label">{label}</p>}
+          {title && (level === 1 ? <h1>{title}</h1> : <h2>{title}</h2>)}
+          {lead && <p class="lead">{lead}</p>}
+        </header>
+      )
+    }
+    <div class={hasHead ? 'section-body' : ''}>
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  .section-head {
+    max-width: 34rem;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .section-head--center {
+    margin-inline: auto;
+    text-align: center;
+    justify-items: center;
+  }
+
+  .section-body {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+</style>

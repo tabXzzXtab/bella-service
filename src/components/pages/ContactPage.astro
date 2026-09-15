@@ -1,0 +1,145 @@
+---
+import ContactForm from '../ContactForm.astro';
+import Section from '../Section.astro';
+import { formatAddress, site } from '../../data/site';
+import { pick, useTranslations } from '../../i18n/utils';
+import type { Locale } from '../../i18n/config';
+
+/**
+ * The contact page.
+ *
+ * The form and the direct details sit side by side deliberately: a fair share
+ * of this company's customers would rather ring than type, and burying the
+ * number below a form loses those enquiries entirely.
+ *
+ * The details column is a plain definition list — the previous version put
+ * every line in a bordered box with an icon tile, which turned a phone number
+ * into a dashboard card.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<Section
+  level={1}
+  label={t('contact.hero.eyebrow')}
+  title={t('contact.hero.title')}
+  lead={t('contact.hero.lead')}
+  noReveal
+>
+  <div class="ct">
+    <ContactForm locale={locale} />
+
+    <aside class="ct-side">
+      <dl class="ct-list">
+        <div>
+          <dt>{t('common.callUs')}</dt>
+          <dd><a href={`tel:${site.phone.href}`}>{site.phone.display}</a></dd>
+          <dd class="ct-note">{pick(site.openingHours, locale)}</dd>
+        </div>
+
+        <div>
+          <dt>{t('common.emailUs')}</dt>
+          <dd><a href={`mailto:${site.email}`}>{site.email}</a></dd>
+          <dd class="ct-note">{pick(site.emailResponse, locale)}</dd>
+        </div>
+
+        <div>
+          <dt>{t('common.serviceArea')}</dt>
+          <dd>{pick(site.serviceArea, locale)}</dd>
+          <dd class="ct-note">{pick(site.presentsAs, locale)}</dd>
+        </div>
+      </dl>
+
+      <div class="ct-legal">
+        <h2 class="ct-legal-title">{t('contact.legal')}</h2>
+        <p class="ct-note">
+          {site.legalName}<br />
+          {t('common.orgNumber')}
+          {site.orgNumber}<br />
+          {formatAddress(site.address)}
+          {
+            site.approvedForFTax && (
+              <>
+                <br />
+                {t('footer.fTax')}
+              </>
+            )
+          }
+        </p>
+      </div>
+    </aside>
+  </div>
+</Section>
+
+<style>
+  .ct {
+    display: grid;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  @media (width >= 62rem) {
+    .ct {
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 4.5rem;
+    }
+  }
+
+  .ct-list {
+    display: grid;
+    gap: 1.75rem;
+    margin: 0;
+  }
+
+  .ct-list dt {
+    font-size: 0.875rem;
+    color: var(--ink-faint);
+    margin-bottom: 0.3rem;
+  }
+
+  .ct-list dd {
+    margin: 0;
+    font-size: 1.0625rem;
+    letter-spacing: -0.012em;
+  }
+
+  .ct-list a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line-strong);
+    padding-bottom: 1px;
+    transition: border-color var(--dur-fast) var(--ease);
+  }
+
+  .ct-list a:hover {
+    border-bottom-color: var(--accent);
+  }
+
+  .ct-note {
+    font-size: 0.9375rem !important;
+    color: var(--ink-soft);
+    margin-top: 0.2rem !important;
+  }
+
+  .ct-legal {
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .ct-legal-title {
+    font-size: 0.875rem;
+    font-weight: 450;
+    color: var(--ink-faint);
+    margin-bottom: 0.6rem;
+  }
+
+  .ct-legal p {
+    line-height: 1.7;
+  }
+</style>

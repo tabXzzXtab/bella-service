@@ -1,0 +1,12 @@
+---
+import Base from '../../layouts/Base.astro';
+import ServicesPage from '../../components/pages/ServicesPage.astro';
+import { useTranslations } from '../../i18n/utils';
+
+const locale = 'en' as const;
+const t = useTranslations(locale);
+---
+
+<Base title={t('services.title')} description={t('services.description')}>
+  <ServicesPage locale={locale} />
+</Base>

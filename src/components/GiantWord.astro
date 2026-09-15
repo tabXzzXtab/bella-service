@@ -1,0 +1,94 @@
+---
+import Placeholder from './Placeholder.astro';
+import type { MediaId } from '../data/media';
+import type { Locale } from '../i18n/config';
+
+/**
+ * One word set as large as the column allows, with an image lapping its corner.
+ *
+ * Sized in container-query units, not `vw`: the page gutter caps content at
+ * 76rem, so a `vw`-sized word keeps growing after the column has stopped and
+ * gets clipped on wide screens. `cqw` measures the column instead.
+ *
+ * Set LIGHT, not black. At this size weight is not what creates impact —
+ * scale is, and a hairline-thin word at 300 reads as confident where the same
+ * word at 800 reads as shouting.
+ *
+ * The word is decorative emphasis, not a heading; the section around it
+ * carries the real one. It is aria-hidden so a screen reader does not announce
+ * a stray word between two paragraphs.
+ */
+interface Props {
+  word: string;
+  note?: string;
+  media?: MediaId;
+  locale: Locale;
+}
+
+const { word, note, media, locale } = Astro.props;
+---
+
+<div class="gw">
+  {
+    media && (
+      <div class="gw-media">
+        <Placeholder id={media} locale={locale} />
+      </div>
+    )
+  }
+
+  <p class="gw-word" aria-hidden="true">{word}</p>
+
+  {note && <p class="gw-note">{note}</p>}
+</div>
+
+<style>
+  .gw {
+    position: relative;
+    display: grid;
+    gap: 1.5rem;
+    /* Establishes the measuring context for the cqw sizing below. */
+    container-type: inline-size;
+  }
+
+  .gw-word {
+    /* Fills the text column at any width. Keep the word short — the
+       coefficient assumes about five characters. */
+    font-size: clamp(3.5rem, 25cqw, 17rem);
+    font-weight: 300;
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+    color: var(--ink);
+    /* A long word must never be what pushes the page sideways. */
+    overflow-wrap: anywhere;
+  }
+
+  .gw-note {
+    font-size: clamp(1.0625rem, 1.4vw, 1.25rem);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 34ch;
+  }
+
+  .gw-media {
+    max-width: 26rem;
+  }
+
+  @media (width >= 56rem) {
+    .gw-media {
+      position: absolute;
+      /* Lifted above the word and pushed to the edge so it laps the upper
+         corner rather than covering letters. */
+      top: -1.5rem;
+      right: 0;
+      z-index: 2;
+      width: min(24%, 18rem);
+      max-width: none;
+    }
+
+    .gw-note {
+      justify-self: end;
+      text-align: right;
+    }
+  }
+</style>

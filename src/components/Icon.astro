@@ -1,0 +1,36 @@
+---
+import { icons, type IconName } from '../lib/icons';
+
+interface Props {
+  name: IconName;
+  /** Rendered size in px. Icons are square. */
+  size?: number;
+  class?: string;
+  /**
+   * Give a label only when the icon carries meaning on its own. Beside visible
+   * text it is decoration, and the default (aria-hidden) is correct — a screen
+   * reader announcing "phone phone" helps nobody.
+   */
+  label?: string;
+}
+
+const { name, size = 24, class: className, label } = Astro.props;
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.75"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  class={className}
+  aria-hidden={label ? undefined : 'true'}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+>
+  <Fragment set:html={icons[name]} />
+</svg>

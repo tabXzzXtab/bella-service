@@ -1,0 +1,95 @@
+---
+import Button from '../Button.astro';
+import Placeholder from '../Placeholder.astro';
+import Section from '../Section.astro';
+import ServiceCard from '../ServiceCard.astro';
+import { services } from '../../data/services';
+import { path, useTranslations } from '../../i18n/utils';
+import type { Locale } from '../../i18n/config';
+
+/**
+ * The services page — all six, with their starting prices.
+ *
+ * The prices are why this page converts: someone comparing roof cleaners wants
+ * to know what it costs, and most competitors make them fill in a form to find
+ * out. Publishing a "från" rate answers the question and earns the enquiry.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<Section
+  level={1}
+  label={t('services.hero.eyebrow')}
+  title={t('services.hero.title')}
+  lead={t('services.hero.lead')}
+  noReveal
+>
+  <ul class="svc-grid">
+    {
+      services.map((service, index) => (
+        <li class="reveal" style={`--reveal-delay:${index * 60}ms`}>
+          <ServiceCard service={service} locale={locale} level={2} />
+        </li>
+      ))
+    }
+  </ul>
+</Section>
+
+<Section tone="sunk">
+  <div class="closer reveal">
+    <div class="closer-copy">
+      <h2>{t('services.cta.title')}</h2>
+      <p class="lead">{t('services.cta.lead')}</p>
+      <Button href={path('contact', locale)} variant="accent" size="lg">
+        {t('common.bookInspection')}
+      </Button>
+    </div>
+    <Placeholder id="taktvattWork" locale={locale} radius="lg" />
+  </div>
+</Section>
+
+<style>
+  .svc-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+
+  @media (width >= 40rem) {
+    .svc-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (width >= 68rem) {
+    .svc-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .closer {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+  }
+
+  @media (width >= 56rem) {
+    .closer {
+      grid-template-columns: 1fr 0.85fr;
+      gap: 4rem;
+    }
+  }
+
+  .closer-copy {
+    display: grid;
+    justify-items: start;
+    gap: 1.25rem;
+  }
+</style>

@@ -1,0 +1,117 @@
+---
+import { formatPrice, type Service } from '../data/services';
+import { pick, useTranslations } from '../i18n/utils';
+import type { Locale } from '../i18n/config';
+
+/**
+ * One service.
+ *
+ * No icon, no outline, no price badge. The card is a white panel with a
+ * hairline rule between the description and what is included — the earlier
+ * version boxed every element separately and read as a dashboard widget
+ * rather than as something a person would want to buy.
+ *
+ * The price keeps its "Från" qualifier in every rendering; see formatPrice.
+ */
+interface Props {
+  service: Service;
+  locale: Locale;
+  /** Heading level, so the card fits the outline of whatever page it is on. */
+  level?: 2 | 3;
+}
+
+const { service, locale, level = 3 } = Astro.props;
+
+const t = useTranslations(locale);
+const price = formatPrice(service.price, locale);
+const isFree = service.price.kind === 'free';
+---
+
+<article class="svc panel" id={service.id}>
+  {
+    level === 2 ? (
+      <h2 class="svc-title">{pick(service.title, locale)}</h2>
+    ) : (
+      <h3 class="svc-title">{pick(service.title, locale)}</h3>
+    )
+  }
+
+  <p class:list={['svc-price', isFree && 'svc-price--free']}>{price}</p>
+
+  <p class="svc-summary">{pick(service.summary, locale)}</p>
+
+  <div class="svc-includes">
+    <h4 class="svc-includes-title">{t('services.includes')}</h4>
+    <ul>
+      {pick(service.bullets, locale).map((bullet) => <li>{bullet}</li>)}
+    </ul>
+  </div>
+</article>
+
+<style>
+  .svc {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .svc-title {
+    margin-bottom: 0.4rem;
+  }
+
+  .svc-price {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--accent-ink);
+    margin-bottom: 1rem;
+  }
+
+  .svc-summary {
+    color: var(--ink-soft);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    margin-bottom: 1.75rem;
+  }
+
+  .svc-includes {
+    /* Pushes the included list to the bottom, so cards of different text
+       lengths still line their lists up with each other. */
+    margin-top: auto;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .svc-includes-title {
+    color: var(--ink-faint);
+    font-weight: 450;
+    margin-bottom: 0.6rem;
+  }
+
+  .svc-includes ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+
+  /* A small accent dot instead of a tick icon — the ticks turned every card
+     into a pricing table. */
+  .svc-includes li {
+    position: relative;
+    padding-left: 0.95rem;
+  }
+
+  .svc-includes li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: var(--accent);
+  }
+</style>

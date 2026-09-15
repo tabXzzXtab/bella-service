@@ -1,0 +1,255 @@
+---
+import Button from '../Button.astro';
+import FullBleedFigure from '../FullBleedFigure.astro';
+import GiantWord from '../GiantWord.astro';
+import Placeholder from '../Placeholder.astro';
+import ProcessTimeline from '../ProcessTimeline.astro';
+import Section from '../Section.astro';
+import { stats } from '../../data/site';
+import { path, pick, useTranslations } from '../../i18n/utils';
+import type { Locale } from '../../i18n/config';
+
+/**
+ * "Så går det till" — the process page.
+ *
+ * Structurally modelled on the reference in public/media: an editorial hero, a
+ * wide image, a vertical timeline with milestone markers, a wide image with a
+ * floating card, one enormous word, a closing image with overlaid text, and a
+ * solid band at the end.
+ *
+ * Two deliberate departures from that reference:
+ *
+ *  - No testimonial carousel. Bella has supplied no customer quotes, and
+ *    writing plausible ones would be fabricating reviews. The company's real
+ *    figures sit in that slot; a quote scroller can replace it the day actual
+ *    reviews exist.
+ *  - No step states a duration. The reference gives one for every phase; we
+ *    have not been given any, and inventing them would be inventing company
+ *    facts.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+{/* --- Hero ------------------------------------------------------------- */}
+<section class="ph">
+  <div class="container-page">
+    <div class="ph-copy">
+      <p class="label">{t('process.hero.eyebrow')}</p>
+      <h1>{t('process.hero.title')}</h1>
+      <div class="ph-lead">
+        <p>{t('process.hero.lead1')}</p>
+        <p class="muted">{t('process.hero.lead2')}</p>
+        <p class="muted">{t('process.hero.lead3')}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-page ph-media">
+    <Placeholder id="heroRoof" locale={locale} radius="lg" priority />
+  </div>
+</section>
+
+{/* --- The timeline ------------------------------------------------------ */}
+<Section title={t('process.timeline.title')} align="center">
+  <ProcessTimeline locale={locale} />
+</Section>
+
+{/* --- Method, as a card over a wide image ------------------------------- */}
+<section class="ph-band">
+  <div class="container-page">
+    <FullBleedFigure
+      media="takmalningWork"
+      locale={locale}
+      cardTitle={t('process.method.title')}
+      cardBody={t('process.method.body')}
+    />
+  </div>
+</section>
+
+{/* --- The one big word -------------------------------------------------- */}
+<section class="ph-giant">
+  <div class="container-page">
+    <GiantWord
+      word={t('process.giantWord')}
+      note={t('process.giantWord.note')}
+      media="heroRoofBefore"
+      locale={locale}
+    />
+  </div>
+</section>
+
+{/* --- Finished ---------------------------------------------------------- */}
+<section class="ph-band">
+  <div class="container-page">
+    <FullBleedFigure
+      media="fasadWork"
+      locale={locale}
+      overlayTitle={t('process.welcome.title')}
+      overlayNote={t('process.welcome.note')}
+    />
+  </div>
+</section>
+
+{
+  /*
+  Where the reference puts a testimonial carousel. Real client figures, not
+  invented quotes — see the note at the top of this file.
+*/
+}
+<section class="ph-stats" aria-label={t('process.stats.title')}>
+  <div class="container-page ph-stats-inner">
+    <h2 class="ph-stats-title">{t('process.stats.title')}</h2>
+    <dl class="ph-stats-grid">
+      {
+        stats.map((stat, index) => (
+          <div class="ph-stat reveal" style={`--reveal-delay:${index * 80}ms`}>
+            <dt class="ph-stat-value">{stat.value}</dt>
+            <dd class="ph-stat-label">{pick(stat.label, locale)}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
+
+{/* --- Closing CTA ------------------------------------------------------- */}
+<section class="ph-closer">
+  <div class="container-page ph-closer-inner reveal">
+    <h2>{t('process.cta.title')}</h2>
+    <p class="ph-closer-lead">{t('process.cta.lead')}</p>
+    <div class="ph-closer-actions">
+      <Button href={path('contact', locale)} variant="onDark" size="lg">
+        {t('common.bookInspection')}
+      </Button>
+      <Button href={path('services', locale)} variant="ghostOnDark" size="lg">
+        {t('common.seeServices')}
+      </Button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ph {
+    padding-block: clamp(3rem, 7vw, 6rem) 0;
+  }
+
+  .ph-copy {
+    display: grid;
+    gap: 1.25rem;
+    max-width: 34rem;
+  }
+
+  .ph-lead {
+    display: grid;
+    gap: 0.15rem;
+    font-size: clamp(1.0625rem, 1.4vw, 1.3125rem);
+    line-height: 1.5;
+    letter-spacing: -0.012em;
+  }
+
+  .ph-media {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .ph-band {
+    padding-block: clamp(3rem, 7vw, 5.5rem);
+  }
+
+  .ph-giant {
+    padding-block: clamp(2rem, 5vw, 4.5rem);
+    overflow: hidden;
+  }
+
+  /* --- Stats ------------------------------------------------------------- */
+  .ph-stats {
+    padding-block: clamp(3rem, 6vw, 4.5rem);
+  }
+
+  .ph-stats-inner {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  @media (width >= 56rem) {
+    .ph-stats-inner {
+      grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+      gap: 4rem;
+      align-items: start;
+    }
+  }
+
+  .ph-stats-title {
+    font-size: clamp(1.1875rem, 1.9vw, 1.5rem);
+    font-weight: 500;
+    letter-spacing: -0.018em;
+    max-width: 18ch;
+  }
+
+  .ph-stats-grid {
+    display: grid;
+    gap: 2rem;
+    margin: 0;
+  }
+
+  @media (width >= 40rem) {
+    .ph-stats-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 2rem;
+    }
+  }
+
+  .ph-stat {
+    display: grid;
+    gap: 0.35rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .ph-stat-value {
+    font-size: clamp(2.25rem, 4.5vw, 3.25rem);
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ph-stat-label {
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+
+  /* --- Closer ------------------------------------------------------------ */
+  .ph-closer {
+    padding-block: clamp(4rem, 9vw, 7rem);
+    background-color: var(--navy);
+  }
+
+  .ph-closer-inner {
+    display: grid;
+    justify-items: start;
+    gap: 1.25rem;
+    max-width: 36rem;
+  }
+
+  .ph-closer h2 {
+    color: var(--bg);
+  }
+
+  .ph-closer-lead {
+    font-size: clamp(1.0625rem, 1.4vw, 1.25rem);
+    line-height: 1.5;
+    color: rgb(251 250 248 / 0.75);
+  }
+
+  .ph-closer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+</style>

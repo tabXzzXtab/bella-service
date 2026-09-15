@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import HomePage from '../components/pages/HomePage.astro';
+import { useTranslations } from '../i18n/utils';
+
+/**
+ * Swedish start page, at "/".
+ *
+ * Swedish is unprefixed because it is what customers in Skåne actually search
+ * for — the root domain should answer in it. English lives under /en/.
+ */
+const locale = 'sv' as const;
+const t = useTranslations(locale);
+---
+
+<Base title={t('home.title')} description={t('home.description')}>
+  <HomePage locale={locale} />
+</Base>

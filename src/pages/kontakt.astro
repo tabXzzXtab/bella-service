@@ -1,0 +1,12 @@
+---
+import Base from '../layouts/Base.astro';
+import ContactPage from '../components/pages/ContactPage.astro';
+import { useTranslations } from '../i18n/utils';
+
+const locale = 'sv' as const;
+const t = useTranslations(locale);
+---
+
+<Base title={t('contact.title')} description={t('contact.description')}>
+  <ContactPage locale={locale} />
+</Base>

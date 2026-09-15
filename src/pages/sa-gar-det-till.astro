@@ -1,0 +1,12 @@
+---
+import Base from '../layouts/Base.astro';
+import ProcessPage from '../components/pages/ProcessPage.astro';
+import { useTranslations } from '../i18n/utils';
+
+const locale = 'sv' as const;
+const t = useTranslations(locale);
+---
+
+<Base title={t('process.title')} description={t('process.description')}>
+  <ProcessPage locale={locale} />
+</Base>

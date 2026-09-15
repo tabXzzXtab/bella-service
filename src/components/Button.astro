@@ -1,0 +1,54 @@
+---
+/**
+ * The only button in the project.
+ *
+ * Renders an <a> when given `href`, otherwise a real <button>. That distinction
+ * matters: links are for going somewhere, buttons are for doing something, and
+ * assistive technology and middle-click both depend on getting it right.
+ *
+ * On `variant`: `primary` is the brand ink and is the normal choice. `accent`
+ * is the orange one — it is for the single most important action in a view,
+ * and putting it on two things at once is how it stops meaning anything.
+ */
+import type { HTMLAttributes } from 'astro/types';
+
+type Props = Omit<HTMLAttributes<'button'> & HTMLAttributes<'a'>, 'type' | 'href'> & {
+  href?: string;
+  type?: 'button' | 'submit';
+  variant?: 'primary' | 'accent' | 'ghost' | 'onDark' | 'ghostOnDark';
+  size?: 'md' | 'lg';
+  /** Set on an <a> pointing off-site; adds the safe rel attributes. */
+  external?: boolean;
+};
+
+const {
+  href,
+  type = 'button',
+  variant = 'primary',
+  size = 'md',
+  class: className = '',
+  external = false,
+  disabled = false,
+  ...rest
+} = Astro.props;
+
+const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boolean).join(' ');
+---
+
+{
+  href ? (
+    <a
+      href={href}
+      class={classes}
+      rel={external ? 'noopener noreferrer' : undefined}
+      target={external ? '_blank' : undefined}
+      {...rest}
+    >
+      <slot />
+    </a>
+  ) : (
+    <button type={type} class={classes} disabled={disabled} {...rest}>
+      <slot />
+    </button>
+  )
+}

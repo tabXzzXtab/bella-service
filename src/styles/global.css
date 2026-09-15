@@ -1,0 +1,415 @@
+/* ---------------------------------------------------------------------------
+ * Global stylesheet — imported once, by src/layouts/Base.astro.
+ *
+ * ONE design. Restraint is the whole idea.
+ *
+ * The rules below exist because the previous version broke all of them and
+ * read as generated rather than designed. If you are about to add something,
+ * check it against these first:
+ *
+ *  1. Headings are SENTENCE CASE. No uppercase display type anywhere.
+ *  2. No monospace labels with wide letter-spacing. That treatment is a tell;
+ *     a small label in the body face at muted weight says the same thing
+ *     without shouting.
+ *  3. Surfaces are separated by a hairline or by space — not by a 2px box.
+ *     Very few things get a border at all.
+ *  4. Orange is an accent, not a theme. It marks one primary action per view
+ *     and occasionally underlines a number. It never fills a large area.
+ *  5. Weight does the work that size and colour used to. Display text is
+ *     LIGHT (300–400) and large; emphasis comes from scale, not from black.
+ *  6. Space is the main design material. When something looks wrong the fix is
+ *     usually more room, not more decoration.
+ * ------------------------------------------------------------------------- */
+
+@import 'tailwindcss';
+
+/* Self-hosted so no request ever leaves for a font CDN. That keeps the site
+ * fast and keeps visitor IP addresses out of a third party's logs, which is
+ * the position you want to be in under GDPR. */
+@import '@fontsource-variable/schibsted-grotesk';
+@import '@fontsource-variable/inter';
+
+:root {
+  /* --- Type ------------------------------------------------------------
+   * One family. Schibsted Grotesk is a Nordic grotesque — quiet, modern, and
+   * not the default that every generated site reaches for. Inter is kept only
+   * as the metric fallback while the variable font loads. */
+  --font-sans:
+    'Schibsted Grotesk Variable', 'Inter Variable', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* --- Colour ----------------------------------------------------------
+   * A warm off-white, a near-black with a hint of blue in it, and one orange.
+   * That is the entire palette. */
+  --bg: #fbfaf8;
+  --bg-sunk: #f4f2ee;
+  --surface: #ffffff;
+
+  --ink: #16191f;
+  --ink-soft: #5c636e;
+  --ink-faint: #8b929c;
+
+  /* The brand navy, kept for the mark and for inverted bands. */
+  --navy: #1f3a5f;
+
+  --accent: #e8701a;
+  /* Darkened for text use — full-strength orange on this ground is 2.4:1 and
+   * fails WCAG AA for anything smaller than a headline. */
+  --accent-ink: #b04c06;
+  --accent-wash: #fdf2e9;
+
+  /* Hairlines. Nothing on this site uses a 2px border. */
+  --line: rgb(22 25 31 / 0.1);
+  --line-strong: rgb(22 25 31 / 0.22);
+
+  /* --- Shape ------------------------------------------------------------ */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  /* Shadows are almost invisible on purpose — they lift an element off the
+   * page by a millimetre, they do not announce it. */
+  --shadow: 0 1px 2px rgb(22 25 31 / 0.04), 0 8px 24px -12px rgb(22 25 31 / 0.12);
+
+  /* --- Rhythm ----------------------------------------------------------- */
+  --gutter: 1.375rem;
+  --section-pad: clamp(4.5rem, 11vw, 10rem);
+  --measure: 62ch;
+
+  /* --- Motion ------------------------------------------------------------
+   * One curve, short durations. Movement should be barely noticed. */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 150ms;
+  --dur: 260ms;
+  --dur-slow: 620ms;
+}
+
+@utility container-page {
+  width: 100%;
+  max-width: 76rem;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+
+  @media (width >= 48rem) {
+    padding-inline: 2.5rem;
+  }
+}
+
+/* A narrower column for running text. Long measures are the other thing that
+ * makes a page feel unconsidered. */
+@utility container-text {
+  width: 100%;
+  max-width: 46rem;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+
+  @media (width >= 48rem) {
+    padding-inline: 2.5rem;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
+    background-color: var(--bg);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    font-weight: 400;
+    line-height: 1.6;
+    letter-spacing: -0.006em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Display text: large, light, sentence case, optically tightened.
+   * The negative tracking matters — at these sizes default spacing reads
+   * loose and amateurish. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.08;
+    letter-spacing: -0.028em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  h1 {
+    font-size: clamp(2.5rem, 6.2vw, 4.75rem);
+    font-weight: 300;
+    letter-spacing: -0.035em;
+  }
+
+  h2 {
+    font-size: clamp(1.875rem, 4vw, 3rem);
+    font-weight: 350;
+  }
+
+  h3 {
+    font-size: clamp(1.1875rem, 1.9vw, 1.5rem);
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.018em;
+  }
+
+  h4 {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: var(--accent-wash);
+    color: var(--ink);
+  }
+
+  img,
+  svg,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* --- Structure --------------------------------------------------------- */
+  .section {
+    padding-block: var(--section-pad);
+  }
+
+  .section--tight {
+    padding-block: calc(var(--section-pad) * 0.55);
+  }
+
+  .section--sunk {
+    background-color: var(--bg-sunk);
+  }
+
+  /* The small label above a heading. Sentence case, body face, muted —
+   * deliberately NOT a spaced-out monospace caps eyebrow. */
+  .label {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--accent-ink);
+    letter-spacing: -0.006em;
+  }
+
+  .lead {
+    font-size: clamp(1.0625rem, 1.4vw, 1.3125rem);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    letter-spacing: -0.012em;
+    max-width: 44ch;
+  }
+
+  .muted {
+    color: var(--ink-soft);
+  }
+
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  /* --- Surfaces ----------------------------------------------------------
+   * A panel is a tint, not a box. Only .panel--outlined draws an edge, and
+   * that edge is a hairline. */
+  .panel {
+    background-color: var(--surface);
+    border-radius: var(--radius);
+    padding: clamp(1.5rem, 2.6vw, 2rem);
+  }
+
+  .panel--outlined {
+    border: 1px solid var(--line);
+  }
+
+  .panel--sunk {
+    background-color: var(--bg-sunk);
+  }
+
+  /* --- Buttons -----------------------------------------------------------
+   * Two real variants. The primary is the brand ink, not the orange — orange
+   * at button size is a lot of orange, and it stops meaning anything once it
+   * is on every screen. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color var(--dur-fast) var(--ease),
+      border-color var(--dur-fast) var(--ease),
+      color var(--dur-fast) var(--ease),
+      opacity var(--dur-fast) var(--ease);
+  }
+
+  .btn:disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .btn--md {
+    padding: 0.65rem 1.15rem;
+    font-size: 0.9375rem;
+  }
+
+  .btn--lg {
+    padding: 0.95rem 1.6rem;
+  }
+
+  .btn--primary {
+    background-color: var(--ink);
+    color: var(--bg);
+  }
+
+  .btn--primary:hover {
+    background-color: var(--navy);
+  }
+
+  /* The one place orange fills anything, for the single most important
+   * action on the site. Use sparingly — ideally once per page. */
+  .btn--accent {
+    background-color: var(--accent);
+    color: #fff;
+  }
+
+  .btn--accent:hover {
+    background-color: var(--accent-ink);
+  }
+
+  .btn--ghost {
+    background-color: transparent;
+    border-color: var(--line-strong);
+    color: var(--ink);
+  }
+
+  .btn--ghost:hover {
+    border-color: var(--ink);
+    background-color: var(--surface);
+  }
+
+  /* On inverted bands. */
+  .btn--onDark {
+    background-color: var(--bg);
+    color: var(--ink);
+  }
+
+  .btn--onDark:hover {
+    background-color: #fff;
+  }
+
+  .btn--ghostOnDark {
+    background-color: transparent;
+    border-color: rgb(255 255 255 / 0.3);
+    color: var(--bg);
+  }
+
+  .btn--ghostOnDark:hover {
+    border-color: rgb(255 255 255 / 0.7);
+  }
+
+  /* --- Scroll reveal -----------------------------------------------------
+   * Deliberately slight: a few pixels and a fade. Anything more is motion for
+   * its own sake. Applied only when JS runs, so the page is never blank
+   * without it. */
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity var(--dur-slow) var(--ease),
+      transform var(--dur-slow) var(--ease);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  .js .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .js .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* --- Accessibility ----------------------------------------------------- */
+  .sr-only-focusable {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sr-only-focusable:focus {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 200;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0.75rem 1.25rem;
+    overflow: visible;
+    clip-path: none;
+    background-color: var(--ink);
+    color: var(--bg);
+    border-radius: var(--radius-pill);
+  }
+}

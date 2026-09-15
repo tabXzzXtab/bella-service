@@ -1,0 +1,152 @@
+---
+import Placeholder from './Placeholder.astro';
+import type { MediaId } from '../data/media';
+import type { Locale } from '../i18n/config';
+
+/**
+ * A wide image with an optional card floating over one corner, and an optional
+ * line of text set into the opposite corner.
+ *
+ * On phones nothing floats: the card drops below the image and the overlay
+ * line becomes ordinary text beneath it. Text over a photograph is a contrast
+ * gamble at the best of times, and at 390px there is nowhere for it to go — so
+ * the small screen gets the safe version rather than the clever one.
+ */
+interface Props {
+  media: MediaId;
+  locale: Locale;
+  /** Set into the bottom-left of the image on wide screens. */
+  overlayTitle?: string;
+  overlayNote?: string;
+  /** Floating card, top-left on wide screens. */
+  cardTitle?: string;
+  cardBody?: string;
+  class?: string;
+}
+
+const {
+  media,
+  locale,
+  overlayTitle,
+  overlayNote,
+  cardTitle,
+  cardBody,
+  class: className = '',
+} = Astro.props;
+
+const hasCard = Boolean(cardTitle);
+const hasOverlay = Boolean(overlayTitle || overlayNote);
+---
+
+<figure class:list={['fb', className]}>
+  <div class="fb-frame">
+    <Placeholder id={media} locale={locale} radius="none" />
+
+    {
+      hasOverlay && (
+        <figcaption class="fb-overlay">
+          {overlayTitle && <p class="fb-overlay-title">{overlayTitle}</p>}
+          {overlayNote && <p class="fb-overlay-note">{overlayNote}</p>}
+        </figcaption>
+      )
+    }
+  </div>
+
+  {
+    hasCard && (
+      <div class="fb-card">
+        <h3>{cardTitle}</h3>
+        {cardBody && <p>{cardBody}</p>}
+      </div>
+    )
+  }
+</figure>
+
+<style>
+  .fb {
+    position: relative;
+    margin: 0;
+  }
+
+  .fb-frame {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .fb-overlay {
+    display: grid;
+    gap: 0.3rem;
+    padding-top: 1.25rem;
+  }
+
+  .fb-overlay-title {
+    font-size: clamp(1.875rem, 4vw, 3rem);
+    font-weight: 350;
+    letter-spacing: -0.028em;
+    line-height: 1.08;
+    color: var(--ink);
+  }
+
+  .fb-overlay-note {
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+
+  .fb-card {
+    margin-top: 1.25rem;
+    padding: clamp(1.25rem, 2.4vw, 1.75rem);
+    background-color: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .fb-card h3 {
+    margin-bottom: 0.6rem;
+  }
+
+  .fb-card p {
+    color: var(--ink-soft);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+
+  @media (width >= 56rem) {
+    .fb-card {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      z-index: 2;
+      margin-top: 0;
+      max-width: 21rem;
+    }
+
+    .fb-overlay {
+      position: absolute;
+      inset-inline: clamp(1.5rem, 4vw, 3rem);
+      bottom: clamp(1.5rem, 4vw, 3rem);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 2rem;
+      padding-top: 0;
+    }
+
+    .fb-overlay-title,
+    .fb-overlay-note {
+      color: #fff;
+    }
+
+    /* A gradient scrim, so the text stays legible whatever the photograph
+       turns out to be — without it this depends on getting lucky. */
+    .fb-frame::after {
+      content: '';
+      position: absolute;
+      inset-inline: 0;
+      bottom: 0;
+      height: 50%;
+      pointer-events: none;
+      background-image: linear-gradient(to top, rgb(10 12 16 / 0.55), transparent);
+    }
+  }
+</style>

@@ -1,0 +1,222 @@
+---
+import Button from './Button.astro';
+import { estimatorServices } from '../data/services';
+import { path, pick, useTranslations } from '../i18n/utils';
+import type { Locale } from '../i18n/config';
+
+/**
+ * Area-based price estimator.
+ *
+ * The client publishes per-m² starting rates, which makes this possible — and
+ * it turns "what does a roof wash cost?" into a number in three seconds, then
+ * hands the visitor to the free inspection to firm it up.
+ *
+ * ⚠ It must never read as a quote. Every rate is a "från" figure, the output
+ * is labelled an estimate, and the disclaimer is not optional chrome — it is
+ * what keeps this honest. Do not remove it to tidy the layout.
+ *
+ * No RUT/ROT deduction appears in this calculation. Taktvätt's eligibility has
+ * been contested with Skatteverket; nothing about deductions goes on this site
+ * until the client confirms in writing how they invoice it.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const options = estimatorServices.map((service) => ({
+  id: service.id,
+  label: pick(service.title, locale),
+  amount: service.price.amount,
+  unit: service.price.unit,
+}));
+
+const labels = { sqm: t('estimator.area'), panel: t('estimator.panels') };
+const units = { sqm: t('estimator.areaUnit'), panel: t('estimator.panelsUnit') };
+---
+
+<div class="est panel panel--outlined" data-estimator>
+  <div class="est-fields">
+    <div class="field">
+      <label for="est-service">{t('estimator.service')}</label>
+      <select id="est-service" data-est-service>
+        {options.map((option) => <option value={option.id}>{option.label}</option>)}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="est-amount" data-est-label>{labels.sqm}</label>
+      <div class="field-unit-wrap">
+        <input
+          id="est-amount"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="2000"
+          step="1"
+          value="120"
+          data-est-amount
+        />
+        <span class="field-unit" data-est-unit>{units.sqm}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="est-out" aria-live="polite">
+    <p class="est-out-label">{t('estimator.result')}</p>
+    <p class="est-figure">
+      <span data-est-result>—</span><span class="est-cur">{t('estimator.currency')}</span>
+    </p>
+  </div>
+
+  <p class="est-note">{t('estimator.disclaimer')}</p>
+
+  <Button href={path('contact', locale)} variant="accent" size="lg" class="est-cta">
+    {t('common.bookInspection')}
+  </Button>
+</div>
+
+<script is:inline define:vars={{ rates: options, labels, units }}>
+  (function () {
+    const root = document.querySelector('[data-estimator]');
+    if (!root) return;
+
+    const serviceSelect = root.querySelector('[data-est-service]');
+    const amountInput = root.querySelector('[data-est-amount]');
+    const amountLabel = root.querySelector('[data-est-label]');
+    const unitLabel = root.querySelector('[data-est-unit]');
+    const result = root.querySelector('[data-est-result]');
+
+    // Swedish groups thousands with a space: 12 480 kr, not 12,480 kr.
+    const formatter = new Intl.NumberFormat(document.documentElement.lang || 'sv-SE', {
+      maximumFractionDigits: 0,
+    });
+
+    function update() {
+      const rate = rates.find((r) => r.id === serviceSelect.value) ?? rates[0];
+
+      // Solar panels are priced per panel, everything else per square metre,
+      // so the label has to follow the service.
+      amountLabel.textContent = labels[rate.unit];
+      unitLabel.textContent = units[rate.unit];
+
+      const quantity = Number(amountInput.value);
+      result.textContent =
+        Number.isFinite(quantity) && quantity > 0
+          ? formatter.format(Math.round(quantity * rate.amount))
+          : '—';
+    }
+
+    serviceSelect.addEventListener('change', update);
+    amountInput.addEventListener('input', update);
+    update();
+  })();
+</script>
+
+<style>
+  .est {
+    display: grid;
+    gap: 1.75rem;
+    align-content: start;
+  }
+
+  .est-fields {
+    display: grid;
+    gap: 1.1rem;
+  }
+
+  @media (width >= 34rem) {
+    .est-fields {
+      grid-template-columns: 1.4fr 1fr;
+    }
+  }
+
+  .field {
+    display: grid;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .field label {
+    font-size: 0.875rem;
+    font-weight: 450;
+    color: var(--ink-soft);
+  }
+
+  .field select,
+  .field input {
+    width: 100%;
+    padding: 0.8rem 0.95rem;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--ink);
+    background-color: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--dur-fast) var(--ease);
+  }
+
+  .field select:hover,
+  .field input:hover {
+    border-color: var(--ink-faint);
+  }
+
+  .field-unit-wrap {
+    position: relative;
+  }
+
+  .field-unit-wrap input {
+    padding-inline-end: 3.5rem;
+  }
+
+  .field-unit {
+    position: absolute;
+    top: 50%;
+    right: 0.95rem;
+    translate: 0 -50%;
+    font-size: 0.875rem;
+    color: var(--ink-faint);
+    pointer-events: none;
+  }
+
+  .est-out {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .est-out-label {
+    font-size: 0.875rem;
+    color: var(--ink-soft);
+    margin-bottom: 0.35rem;
+  }
+
+  .est-figure {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    font-size: clamp(2.75rem, 7vw, 4rem);
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .est-cur {
+    font-size: 1.125rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--ink-faint);
+  }
+
+  .est-note {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--ink-faint);
+  }
+
+  .est-cta {
+    justify-self: start;
+  }
+</style>

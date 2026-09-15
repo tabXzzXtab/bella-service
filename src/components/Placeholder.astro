@@ -1,0 +1,84 @@
+---
+import { ASPECT_CSS, media, type MediaId } from '../data/media';
+import { pick } from '../i18n/utils';
+import type { Locale } from '../i18n/config';
+
+/**
+ * An image slot that works before the image exists.
+ *
+ * The client has no photography yet, so every image slot is registered in
+ * src/data/media.ts with the aspect ratio it will occupy. This reserves
+ * exactly that space now, so dropping the real photograph in later cannot
+ * shift a single pixel.
+ *
+ * The stand-in is a soft tinted block, not a dashed outline with a label in
+ * the middle. A dashed box reads as broken; a quiet tinted panel reads as
+ * a photograph that has not loaded yet, which is much closer to the truth
+ * and much less distracting when there are eight of them on a page.
+ */
+interface Props {
+  id: MediaId;
+  locale: Locale;
+  class?: string;
+  /** Load eagerly. Set this on the hero image only. */
+  priority?: boolean;
+  /** Corner radius. `none` for images that sit flush in a band. */
+  radius?: 'default' | 'lg' | 'none';
+}
+
+const { id, locale, class: className = '', priority = false, radius = 'default' } = Astro.props;
+
+const slot = media[id];
+const alt = pick(slot.alt, locale);
+
+const radiusValue =
+  radius === 'none' ? '0' : radius === 'lg' ? 'var(--radius-lg)' : 'var(--radius)';
+---
+
+<figure
+  class={`media ${className}`}
+  style={`--media-aspect:${ASPECT_CSS[slot.aspect]};--media-radius:${radiusValue}`}
+>
+  {
+    slot.src ? (
+      <img
+        src={slot.src}
+        alt={alt}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding={priority ? 'sync' : 'async'}
+        fetchpriority={priority ? 'high' : undefined}
+      />
+    ) : (
+      <div class="media-stand-in" role="img" aria-label={alt} />
+    )
+  }
+</figure>
+
+<style>
+  .media {
+    margin: 0;
+    aspect-ratio: var(--media-aspect);
+    overflow: hidden;
+    border-radius: var(--media-radius);
+    background-color: var(--bg-sunk);
+  }
+
+  .media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* A barely-there diagonal, so the block reads as a deliberate placeholder
+     rather than as a broken image — without ever asking for attention. */
+  .media-stand-in {
+    width: 100%;
+    height: 100%;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgb(22 25 31 / 0.028) 0 10px,
+      transparent 10px 20px
+    );
+  }
+</style>
