@@ -8,7 +8,7 @@
  */
 
 /** Canonical public origin, no trailing slash. */
-export const SITE_URL = process.env.SITE_URL ?? 'https://bellaservice.se';
+export const SITE_URL = process.env.SITE_URL ?? 'https://bellaserviceab.se';
 
 /**
  * Sub-path the site is served from, with leading and trailing slashes.
