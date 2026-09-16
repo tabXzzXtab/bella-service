@@ -27,11 +27,11 @@ const t = useTranslations(locale);
 <div class={`ba ${className}`} data-before-after style="--ba-pos: 50%">
   <div class="ba-stage">
     {/* "After" is the base layer, fully visible underneath. */}
-    <Placeholder id="heroRoof" locale={locale} radius="none" />
+    <Placeholder id="transformAfter" locale={locale} radius="none" />
 
     {/* "Before" is clipped from the right by the handle position. */}
     <div class="ba-clip" aria-hidden="true">
-      <Placeholder id="heroRoofBefore" locale={locale} radius="none" />
+      <Placeholder id="transformBefore" locale={locale} radius="none" />
     </div>
 
     <span class="ba-tag ba-tag--before">{t('home.transformation.before')}</span>

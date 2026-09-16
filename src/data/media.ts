@@ -82,6 +82,31 @@ export const media = {
       'identical camera position and framing to a clean version of the same roof',
   },
 
+  transformBefore: {
+    id: 'transformBefore',
+    src: '/media/transform-before.jpg',
+    aspect: '3:2',
+    alt: {
+      sv: 'Altan med betongplattor före rengöring, ogräs mellan plattorna',
+      en: 'A paved terrace before cleaning, with weeds growing between the slabs',
+    },
+    brief:
+      'The BEFORE half of the slider. Supplied by the client. Paired with transformAfter — identical camera position, which is the only reason the wipe reads as the same place.',
+    prompt: 'not generated — this is a real photograph supplied by the client',
+  },
+
+  transformAfter: {
+    id: 'transformAfter',
+    src: '/media/transform-after.jpg',
+    aspect: '3:2',
+    alt: {
+      sv: 'Samma altan efter rengöring, plattorna rena och fria från ogräs',
+      en: 'The same terrace after cleaning, the slabs clear of weeds and dirt',
+    },
+    brief: 'The AFTER half of the slider. Supplied by the client, same framing as transformBefore.',
+    prompt: 'not generated — this is a real photograph supplied by the client',
+  },
+
   taktvattWork: {
     id: 'taktvattWork',
     src: null,

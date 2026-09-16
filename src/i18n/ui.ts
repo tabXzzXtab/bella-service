@@ -68,7 +68,7 @@ const sv = {
   'home.transformation.eyebrow': 'Före och efter',
   'home.transformation.title': 'Skillnaden en tvätt gör',
   'home.transformation.lead':
-    'Samma tak, samma kameravinkel. Dra i reglaget för att se resultatet.',
+    'Samma yta, samma kameravinkel. Dra i reglaget för att se resultatet.',
   'home.transformation.before': 'Före',
   'home.transformation.after': 'Efter',
   'home.transformation.handle': 'Dra för att jämföra före och efter',
@@ -244,7 +244,7 @@ const en: Record<UIKey, string> = {
 
   'home.transformation.eyebrow': 'Before and after',
   'home.transformation.title': 'The difference a wash makes',
-  'home.transformation.lead': 'Same roof, same camera angle. Drag the slider to see the result.',
+  'home.transformation.lead': 'Same surface, same camera angle. Drag the slider to see the result.',
   'home.transformation.before': 'Before',
   'home.transformation.after': 'After',
   'home.transformation.handle': 'Drag to compare before and after',
