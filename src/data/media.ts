@@ -51,6 +51,19 @@ export const ASPECT_CSS: Record<AspectRatio, string> = {
 };
 
 export const media = {
+  homeHero: {
+    id: 'homeHero',
+    src: '/media/home-header.jpg',
+    aspect: '3:2',
+    alt: {
+      sv: 'Hantverkare med andningsskydd som arbetar vid en fasad',
+      en: 'A tradesperson in a respirator working at a building facade',
+    },
+    brief:
+      'Supplied by the client for the start page header. Note it shows dusty cutting work at a building site rather than any of the six roof-care services.',
+    prompt: 'not generated — this is a real photograph supplied by the client',
+  },
+
   heroRoof: {
     id: 'heroRoof',
     src: null,
