@@ -4,23 +4,36 @@ import type { MediaId } from '../data/media';
 import type { Locale } from '../i18n/config';
 
 /**
- * A wide image with an optional card floating over one corner, and an optional
- * line of text set into the opposite corner.
+ * A photograph or clip that runs the full width of the screen, with an
+ * optional line of text set into one corner.
  *
- * On phones nothing floats: the card drops below the image and the overlay
- * line becomes ordinary text beneath it. Text over a photograph is a contrast
- * gamble at the best of times, and at 390px there is nowhere for it to go — so
- * the small screen gets the safe version rather than the clever one.
+ * It is a direct child of its section, not of `.container-page` — the point of
+ * the band is that it breaks the page grid, and wrapping it in the column made
+ * it just another picture with margins.
+ *
+ * On a wide screen it is height-capped rather than aspect-locked, so the whole
+ * band fits on one screen instead of running past the fold; `object-fit: cover`
+ * inside `<Placeholder>` does the cropping. On a phone the cap is dropped and
+ * the media keeps its natural ratio, because 80vh of a portrait screen would
+ * crop a landscape frame down to a letterbox.
+ *
+ * On phones the overlay line does not float either: it becomes ordinary text
+ * beneath the image. Text over a photograph is a contrast gamble at the best of
+ * times, and at 390px there is nowhere for it to go — so the small screen gets
+ * the safe version rather than the clever one.
  */
 interface Props {
   media: MediaId;
   locale: Locale;
-  /** Set into the bottom-left of the image on wide screens. */
+  /** Set into the bottom of the image on wide screens. */
   overlayTitle?: string;
   overlayNote?: string;
-  /** Floating card, top-left on wide screens. */
-  cardTitle?: string;
-  cardBody?: string;
+  /**
+   * Which part of the frame the band must keep when it crops. `top` for a
+   * picture whose subject is near the top edge — the band is wider than any of
+   * the source files, so something always goes.
+   */
+  focus?: 'center' | 'top';
   class?: string;
 }
 
@@ -29,17 +42,16 @@ const {
   locale,
   overlayTitle,
   overlayNote,
-  cardTitle,
-  cardBody,
+  focus = 'center',
   class: className = '',
 } = Astro.props;
 
-const hasCard = Boolean(cardTitle);
 const hasOverlay = Boolean(overlayTitle || overlayNote);
+const focusValue = focus === 'top' ? '50% 15%' : '50% 50%';
 ---
 
 <figure class:list={['fb', className]}>
-  <div class="fb-frame">
+  <div class="fb-frame" style={`--media-focus:${focusValue}`}>
     <Placeholder id={media} locale={locale} radius="none" />
 
     {
@@ -51,15 +63,6 @@ const hasOverlay = Boolean(overlayTitle || overlayNote);
       )
     }
   </div>
-
-  {
-    hasCard && (
-      <div class="fb-card">
-        <h3>{cardTitle}</h3>
-        {cardBody && <p>{cardBody}</p>}
-      </div>
-    )
-  }
 </figure>
 
 <style>
@@ -70,14 +73,15 @@ const hasOverlay = Boolean(overlayTitle || overlayNote);
 
   .fb-frame {
     position: relative;
-    border-radius: var(--radius-lg);
     overflow: hidden;
   }
 
   .fb-overlay {
     display: grid;
     gap: 0.3rem;
-    padding-top: 1.25rem;
+    /* Below the image on phones, so it sits in the page column like any other
+       text rather than starting at the very edge of the screen. */
+    padding: 1.25rem var(--gutter) 0;
   }
 
   .fb-overlay-title {
@@ -93,32 +97,14 @@ const hasOverlay = Boolean(overlayTitle || overlayNote);
     color: var(--ink-soft);
   }
 
-  .fb-card {
-    margin-top: 1.25rem;
-    padding: clamp(1.25rem, 2.4vw, 1.75rem);
-    background-color: var(--surface);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-  }
-
-  .fb-card h3 {
-    margin-bottom: 0.6rem;
-  }
-
-  .fb-card p {
-    color: var(--ink-soft);
-    font-size: 0.9375rem;
-    line-height: 1.6;
-  }
-
   @media (width >= 56rem) {
-    .fb-card {
-      position: absolute;
-      top: 2rem;
-      left: 2rem;
-      z-index: 2;
-      margin-top: 0;
-      max-width: 21rem;
+    /* Height-capped instead of aspect-locked, so the band ends within one
+       screen. `svh` rather than `vh` because on mobile browsers `vh` measures
+       the viewport with the toolbars retracted, which is taller than what is
+       actually on screen. */
+    .fb-frame :global(.media) {
+      aspect-ratio: auto;
+      block-size: min(76svh, 42rem);
     }
 
     .fb-overlay {
@@ -138,15 +124,23 @@ const hasOverlay = Boolean(overlayTitle || overlayNote);
     }
 
     /* A gradient scrim, so the text stays legible whatever the photograph
-       turns out to be — without it this depends on getting lucky. */
+       turns out to be — without it this depends on getting lucky, and the
+       first photograph to land here put white text over a white van. Weighted
+       towards the bottom edge so it darkens the line the text sits on without
+       flattening the picture above it. */
     .fb-frame::after {
       content: '';
       position: absolute;
       inset-inline: 0;
       bottom: 0;
-      height: 50%;
+      height: 60%;
       pointer-events: none;
-      background-image: linear-gradient(to top, rgb(10 12 16 / 0.55), transparent);
+      background-image: linear-gradient(
+        to top,
+        rgb(10 12 16 / 0.78),
+        rgb(10 12 16 / 0.34) 38%,
+        transparent
+      );
     }
   }
 </style>

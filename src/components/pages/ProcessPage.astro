@@ -54,22 +54,22 @@ const t = useTranslations(locale);
   </div>
 </section>
 
+{
+  /* --- The work itself, edge to edge -------------------------------------
+     Sits here, directly under the hero, because it is the only thing on the
+     page that shows the job actually happening. It carries no caption: the
+     clip states the method on its own, and the copy that used to float over
+     it argued against high pressure while the company's own footage shows
+     water under pressure. --------------------------------------------------- */
+}
+<section class="ph-band">
+  <FullBleedFigure media="roofWashWide" locale={locale} />
+</section>
+
 {/* --- The timeline ------------------------------------------------------ */}
 <Section title={t('process.timeline.title')} align="center">
   <ProcessTimeline locale={locale} />
 </Section>
-
-{/* --- Method, as a card over a wide image ------------------------------- */}
-<section class="ph-band">
-  <div class="container-page">
-    <FullBleedFigure
-      media="takmalningWork"
-      locale={locale}
-      cardTitle={t('process.method.title')}
-      cardBody={t('process.method.body')}
-    />
-  </div>
-</section>
 
 {/* --- The one big word -------------------------------------------------- */}
 <section class="ph-giant">
@@ -77,7 +77,7 @@ const t = useTranslations(locale);
     <GiantWord
       word={t('process.giantWord')}
       note={t('process.giantWord.note')}
-      media="heroRoofBefore"
+      media="rentFoam"
       locale={locale}
     />
   </div>
@@ -85,14 +85,12 @@ const t = useTranslations(locale);
 
 {/* --- Finished ---------------------------------------------------------- */}
 <section class="ph-band">
-  <div class="container-page">
-    <FullBleedFigure
-      media="fasadWork"
-      locale={locale}
-      overlayTitle={t('process.welcome.title')}
-      overlayNote={t('process.welcome.note')}
-    />
-  </div>
+  <FullBleedFigure
+    media="finishedJob"
+    locale={locale}
+    overlayTitle={t('process.welcome.title')}
+    overlayNote={t('process.welcome.note')}
+  />
 </section>
 
 {

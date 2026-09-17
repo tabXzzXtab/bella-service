@@ -1,28 +1,35 @@
 ---
-import { hasLogos, logos } from '../data/logos';
+import { hasLogos, logos, shouldScroll } from '../data/logos';
 import { pick, useTranslations } from '../i18n/utils';
 import type { Locale } from '../i18n/config';
 
 /**
  * A slow marquee of partner / certification logos with faded edges.
  *
- * Modelled on the @efferd/logo-cloud-4 block, rebuilt natively. That block is
- * a React component pulling in framer-motion via motion-primitives, and this
- * site is plain Astro that currently ships zero JavaScript — installing it
- * would have meant adding React, a renderer and a motion library to the
+ * Modelled on the @efferd/logo-cloud-3 / -4 blocks, rebuilt natively. Those two
+ * blocks are the same marquee with different defaults, and both are React
+ * components that pull framer-motion in through @efferd/infinite-slider.
+ * This site is plain Astro that currently ships zero JavaScript — installing
+ * either would have meant adding React, a renderer and a motion library to the
  * bundle for one decorative strip.
  *
- * Everything it does visually is CSS here: the track is the list rendered
- * twice and translated -50%, which loops seamlessly because the second copy
- * lands exactly where the first began. The edge fade is a mask rather than the
- * original's gradient overlays, so it works on any background.
+ * Everything they do visually is CSS here: the rail is the list repeated a few
+ * times and slid left by exactly one copy's width, which loops seamlessly
+ * because each copy lands where the one before it began. The edge fade is a
+ * mask rather than the original's gradient overlays, so it works on any
+ * background.
  *
- * The duplicate copy is aria-hidden — a screen reader should hear each logo
- * once, not twice.
+ * Every copy after the first is aria-hidden and unlinked — a screen reader
+ * should hear each partner once, and Tab should stop on each link once.
  *
  * Renders nothing at all while src/data/logos.ts is empty. A logo cloud with
  * no logos is a hole in the page, and a logo cloud with logos the company has
  * no relationship with is worse than a hole.
+ *
+ * Below MARQUEE_MIN logos it does not scroll at all — see the note in
+ * src/data/logos.ts. One wordmark drifting across an empty band reads as a
+ * broken carousel, so the row simply centres and stays put. The duplicate
+ * track is dropped with it, since there is nothing to loop.
  */
 interface Props {
   locale: Locale;
@@ -30,41 +37,61 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+
+/**
+ * How many times the row is repeated on the rail.
+ *
+ * The animation slides every copy left by exactly one copy's width, so copy 2
+ * lands where copy 1 started. That only reads as seamless while the copies
+ * *behind* the last one still cover the column — and two copies of four logos
+ * are narrower than 76rem, so a bare gap sweeps through on every loop. Repeat
+ * until roughly this many wordmarks are on the rail and it stays wider than
+ * the column at any viewport.
+ */
+const RAIL_MIN_LOGOS = 12;
+const trackCount = shouldScroll ? Math.ceil(RAIL_MIN_LOGOS / logos.length) + 1 : 1;
 ---
 
 {
   hasLogos && (
     <section class="lc" aria-label={t('home.logos.title')}>
-      <p class="lc-title">{t('home.logos.title')}</p>
+      {/* Held to the same column as every other band on the site, so the strip
+          centres on the page grid instead of bleeding to the viewport edges.
+          The mask then fades at the column edge, not at the screen edge. */}
+      <div class="container-page">
+        <p class="lc-title">{t('home.logos.title')}</p>
 
-      <div class="lc-viewport">
-        <ul class="lc-track">
-          {logos.map((logo) => (
-            <li>
-              {logo.href ? (
-                <a href={logo.href} rel="noopener noreferrer" target="_blank">
-                  <img
-                    src={logo.src}
-                    alt={pick(logo.alt, locale)}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </a>
-              ) : (
-                <img src={logo.src} alt={pick(logo.alt, locale)} loading="lazy" decoding="async" />
-              )}
-            </li>
+        <div class={`lc-viewport${shouldScroll ? '' : ' lc-viewport--still'}`}>
+          {/* Copies after the first are there only to keep the rail longer
+              than the column, so they carry empty alt text and no links. When
+              the row is too short to scroll, trackCount is 1 and this renders
+              the list exactly once. */}
+          {Array.from({ length: trackCount }, (_, copy) => (
+            <ul class="lc-track" aria-hidden={copy > 0 ? 'true' : undefined}>
+              {logos.map((logo) => (
+                <li>
+                  {copy === 0 && logo.href ? (
+                    <a href={logo.href} rel="noopener noreferrer" target="_blank">
+                      <img
+                        src={logo.src}
+                        alt={pick(logo.alt, locale)}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </a>
+                  ) : (
+                    <img
+                      src={logo.src}
+                      alt={copy === 0 ? pick(logo.alt, locale) : ''}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                </li>
+              ))}
+            </ul>
           ))}
-        </ul>
-
-        {/* The seamless half. Decorative, so it is hidden from assistive tech. */}
-        <ul class="lc-track" aria-hidden="true">
-          {logos.map((logo) => (
-            <li>
-              <img src={logo.src} alt="" loading="lazy" decoding="async" />
-            </li>
-          ))}
-        </ul>
+        </div>
       </div>
     </section>
   )
@@ -103,6 +130,17 @@ const t = useTranslations(locale);
 
   .lc-viewport:hover .lc-track {
     animation-play-state: paused;
+  }
+
+  /* Too few to loop: no movement, no edge fade to hide an entrance that never
+     happens, and the row centred in the band instead of running off it. */
+  .lc-viewport--still {
+    justify-content: center;
+    mask-image: none;
+  }
+
+  .lc-viewport--still .lc-track {
+    animation: none;
   }
 
   .lc-track img {

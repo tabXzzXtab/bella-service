@@ -15,6 +15,9 @@ import type { Locale } from '../i18n/config';
  * the middle. A dashed box reads as broken; a quiet tinted panel reads as
  * a photograph that has not loaded yet, which is much closer to the truth
  * and much less distracting when there are eight of them on a page.
+ *
+ * A slot carrying `video` renders a silent looping clip with the still as its
+ * poster, so the space it occupies is identical either way.
  */
 interface Props {
   id: MediaId;
@@ -31,6 +34,11 @@ const { id, locale, class: className = '', priority = false, radius = 'default' 
 const slot = media[id];
 const alt = pick(slot.alt, locale);
 
+/* `media` is `as const`, so each slot narrows to its own literal shape and the
+   ones with no clip have no `video` property at all to read. `in` narrows the
+   union instead of widening the manifest. */
+const videoSrc = 'video' in slot ? slot.video : undefined;
+
 const radiusValue =
   radius === 'none' ? '0' : radius === 'lg' ? 'var(--radius-lg)' : 'var(--radius)';
 ---
@@ -40,7 +48,19 @@ const radiusValue =
   style={`--media-aspect:${ASPECT_CSS[slot.aspect]};--media-radius:${radiusValue}`}
 >
   {
-    slot.src ? (
+    videoSrc ? (
+      <video
+        src={videoSrc}
+        poster={slot.src ?? undefined}
+        aria-label={alt}
+        data-reduce-motion-pause
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+      />
+    ) : slot.src ? (
       <img
         src={slot.src}
         alt={alt}
@@ -54,6 +74,39 @@ const radiusValue =
   }
 </figure>
 
+{
+  /*
+  A looping clip is motion nobody asked for, and CSS cannot stop a video the
+  way it stops an animation — so this is the one thing on the page that needs
+  a line of script to honour `prefers-reduced-motion`.
+
+  `is:inline` keeps it out of the bundler: it ships as ~200 bytes of markup
+  rather than as a JavaScript asset, so the site still requests no .js file.
+
+  Only a slot that actually carries a clip emits it, so the pages with no video
+  carry none of it, and the guard covers the pages that have more than one.
+  */
+}{
+  videoSrc && (
+    <script
+      is:inline
+      set:html={`if (!window.__bsMotion) {
+  window.__bsMotion = 1;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('video[data-reduce-motion-pause]').forEach(function (v) {
+        v.autoplay = false;
+        v.loop = false;
+        v.controls = true;
+        v.pause();
+      });
+    });
+  }
+}`}
+    />
+  )
+}
+
 <style>
   .media {
     margin: 0;
@@ -63,10 +116,15 @@ const radiusValue =
     background-color: var(--bg-sunk);
   }
 
-  .media :global(img) {
+  .media :global(img),
+  .media :global(video) {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    /* Which part of the frame survives the crop. A parent that forces the slot
+       into a different shape than the file — a full-bleed band, say — sets this
+       to say what must not be cut off. */
+    object-position: var(--media-focus, 50% 50%);
     display: block;
   }
 

@@ -59,7 +59,7 @@ const sv = {
     'Vi tvättar, målar och vårdar tak och fasader i hela Skåne. Miljövänliga metoder, fast pris innan vi börjar och garanti på det vi gör.',
 
   'home.stats.title': 'Bella Service i siffror',
-  'home.logos.title': 'Vi arbetar med',
+  'home.logos.title': 'Våra samarbetspartners',
 
   'home.mission.eyebrow': 'Vårt uppdrag',
   'home.mission.title': 'Skydda värdet på ditt hem',
@@ -95,9 +95,6 @@ const sv = {
   'process.hero.lead3': 'Sedan bestämmer du.',
   'process.timeline.title': 'Fem steg, inga överraskningar.',
   'process.timeline.stepLabel': 'Steg',
-  'process.method.title': 'Skonsamt, inte snabbt',
-  'process.method.body':
-    'Högtryck tar bort mossan på en eftermiddag och spräcker pannorna på köpet. Vi arbetar med lågt tryck och miljögodkända medel, och låter behandlingen göra jobbet över tid.',
   'process.giantWord': 'Rent.',
   'process.giantWord.note': 'Ett tak som sköts håller längre. Det är hela affärsidén.',
   'process.welcome.title': 'Klart',
@@ -237,7 +234,7 @@ const en: Record<UIKey, string> = {
     'We clean, paint and maintain roofs and facades across Skåne. Environmentally sound methods, a fixed price before we start, and a guarantee on what we do.',
 
   'home.stats.title': 'Bella Service in numbers',
-  'home.logos.title': 'We work with',
+  'home.logos.title': 'Our partners',
 
   'home.mission.eyebrow': 'What we are for',
   'home.mission.title': 'Protect the value of your home',
@@ -272,9 +269,6 @@ const en: Record<UIKey, string> = {
   'process.hero.lead3': 'Then you decide.',
   'process.timeline.title': 'Five steps, no surprises.',
   'process.timeline.stepLabel': 'Step',
-  'process.method.title': 'Gentle, not fast',
-  'process.method.body':
-    'Pressure washing strips the moss in an afternoon and cracks the tiles while it is at it. We work at low pressure with environmentally approved agents, and let the treatment do the job over time.',
   'process.giantWord': 'Clean.',
   'process.giantWord.note': 'A roof that is looked after lasts longer. That is the whole business.',
   'process.welcome.title': 'Finished',

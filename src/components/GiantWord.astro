@@ -49,6 +49,10 @@ const { word, note, media, locale } = Astro.props;
     gap: 1.5rem;
     /* Establishes the measuring context for the cqw sizing below. */
     container-type: inline-size;
+
+    /* Declared once because two rules depend on it: the picture's width, and
+       how far the note has to keep clear of it. */
+    --gw-media-w: min(24%, 18rem);
   }
 
   .gw-word {
@@ -71,7 +75,10 @@ const { word, note, media, locale } = Astro.props;
   }
 
   .gw-media {
-    max-width: 26rem;
+    /* Narrow enough that a portrait frame stays a picture beside the word
+       rather than half a phone screen. A landscape one never reached this
+       width anyway, so the cap only bites where it needs to. */
+    max-width: 16rem;
   }
 
   @media (width >= 56rem) {
@@ -82,13 +89,18 @@ const { word, note, media, locale } = Astro.props;
       top: -1.5rem;
       right: 0;
       z-index: 2;
-      width: min(24%, 18rem);
+      width: var(--gw-media-w);
       max-width: none;
     }
 
     .gw-note {
       justify-self: end;
       text-align: right;
+      /* Out from under the picture. It laps the corner from above, and how far
+         down it reaches depends on its aspect ratio — a portrait frame hangs
+         low enough to cover a note tucked beneath it, so the note steps aside
+         rather than the layout assuming a landscape one. */
+      margin-right: calc(var(--gw-media-w) + 2rem);
     }
   }
 </style>
