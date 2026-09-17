@@ -1,0 +1,144 @@
+---
+import { hasLogos, logos } from '../data/logos';
+import { pick, useTranslations } from '../i18n/utils';
+import type { Locale } from '../i18n/config';
+
+/**
+ * A slow marquee of partner / certification logos with faded edges.
+ *
+ * Modelled on the @efferd/logo-cloud-4 block, rebuilt natively. That block is
+ * a React component pulling in framer-motion via motion-primitives, and this
+ * site is plain Astro that currently ships zero JavaScript — installing it
+ * would have meant adding React, a renderer and a motion library to the
+ * bundle for one decorative strip.
+ *
+ * Everything it does visually is CSS here: the track is the list rendered
+ * twice and translated -50%, which loops seamlessly because the second copy
+ * lands exactly where the first began. The edge fade is a mask rather than the
+ * original's gradient overlays, so it works on any background.
+ *
+ * The duplicate copy is aria-hidden — a screen reader should hear each logo
+ * once, not twice.
+ *
+ * Renders nothing at all while src/data/logos.ts is empty. A logo cloud with
+ * no logos is a hole in the page, and a logo cloud with logos the company has
+ * no relationship with is worse than a hole.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+{
+  hasLogos && (
+    <section class="lc" aria-label={t('home.logos.title')}>
+      <p class="lc-title">{t('home.logos.title')}</p>
+
+      <div class="lc-viewport">
+        <ul class="lc-track">
+          {logos.map((logo) => (
+            <li>
+              {logo.href ? (
+                <a href={logo.href} rel="noopener noreferrer" target="_blank">
+                  <img
+                    src={logo.src}
+                    alt={pick(logo.alt, locale)}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </a>
+              ) : (
+                <img src={logo.src} alt={pick(logo.alt, locale)} loading="lazy" decoding="async" />
+              )}
+            </li>
+          ))}
+        </ul>
+
+        {/* The seamless half. Decorative, so it is hidden from assistive tech. */}
+        <ul class="lc-track" aria-hidden="true">
+          {logos.map((logo) => (
+            <li>
+              <img src={logo.src} alt="" loading="lazy" decoding="async" />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .lc {
+    padding-block: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .lc-title {
+    text-align: center;
+    font-size: 0.9375rem;
+    color: var(--ink-faint);
+    margin-bottom: 1.75rem;
+  }
+
+  .lc-viewport {
+    display: flex;
+    overflow: hidden;
+    /* Fades both edges. A mask rather than gradient overlays, so it does not
+       need to know what colour is behind it. */
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  .lc-track {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: clamp(2.5rem, 5vw, 4rem);
+    padding-inline: clamp(1.25rem, 2.5vw, 2rem);
+    list-style: none;
+    margin: 0;
+    animation: lc-scroll 42s linear infinite;
+  }
+
+  .lc-viewport:hover .lc-track {
+    animation-play-state: paused;
+  }
+
+  .lc-track img {
+    height: clamp(1.5rem, 2.4vw, 2rem);
+    width: auto;
+    object-fit: contain;
+    /* Logos arrive in every colour there is. Muting them to one tone stops the
+       strip becoming the loudest thing on a deliberately quiet page. */
+    filter: grayscale(1);
+    opacity: 0.55;
+    transition:
+      filter var(--dur) var(--ease),
+      opacity var(--dur) var(--ease);
+  }
+
+  .lc-track a:hover img {
+    filter: none;
+    opacity: 1;
+  }
+
+  @keyframes lc-scroll {
+    to {
+      /* Exactly one track's width, including the gap that follows it. */
+      transform: translateX(calc(-100% - clamp(2.5rem, 5vw, 4rem)));
+    }
+  }
+
+  /* Endless movement is a common migraine and vestibular trigger, so the
+     marquee stops completely and the row simply sits there. */
+  @media (prefers-reduced-motion: reduce) {
+    .lc-track {
+      animation: none;
+    }
+
+    .lc-viewport {
+      overflow-x: auto;
+    }
+  }
+</style>

@@ -59,6 +59,7 @@ const sv = {
     'Vi tvättar, målar och vårdar tak och fasader i hela Skåne. Miljövänliga metoder, fast pris innan vi börjar och garanti på det vi gör.',
 
   'home.stats.title': 'Bella Service i siffror',
+  'home.logos.title': 'Vi arbetar med',
 
   'home.mission.eyebrow': 'Vårt uppdrag',
   'home.mission.title': 'Skydda värdet på ditt hem',
@@ -236,6 +237,7 @@ const en: Record<UIKey, string> = {
     'We clean, paint and maintain roofs and facades across Skåne. Environmentally sound methods, a fixed price before we start, and a guarantee on what we do.',
 
   'home.stats.title': 'Bella Service in numbers',
+  'home.logos.title': 'We work with',
 
   'home.mission.eyebrow': 'What we are for',
   'home.mission.title': 'Protect the value of your home',

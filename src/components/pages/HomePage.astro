@@ -2,6 +2,7 @@
 import BeforeAfter from '../BeforeAfter.astro';
 import Button from '../Button.astro';
 import Estimator from '../Estimator.astro';
+import LogoCloud from '../LogoCloud.astro';
 import Placeholder from '../Placeholder.astro';
 import Section from '../Section.astro';
 import ServiceCard from '../ServiceCard.astro';
@@ -49,21 +50,8 @@ const t = useTranslations(locale);
   </div>
 </section>
 
-{/* --- Stats ------------------------------------------------------------ */}
-<section class="stats" aria-label={t('home.stats.title')}>
-  <div class="container-page">
-    <dl class="stats-grid">
-      {
-        stats.map((stat, index) => (
-          <div class="stat reveal" style={`--reveal-delay:${index * 80}ms`}>
-            <dt class="stat-value">{stat.value}</dt>
-            <dd class="stat-label">{pick(stat.label, locale)}</dd>
-          </div>
-        ))
-      }
-    </dl>
-  </div>
-</section>
+{/* --- Logo cloud, where the stats used to sit -------------------------- */}
+<LogoCloud locale={locale} />
 
 {/* --- Mission + pillars ------------------------------------------------ */}
 <Section
@@ -81,6 +69,17 @@ const t = useTranslations(locale);
       ))
     }
   </ul>
+
+  <dl class="stats-grid" aria-label={t('home.stats.title')}>
+    {
+      stats.map((stat, index) => (
+        <div class="stat reveal" style={`--reveal-delay:${index * 80}ms`}>
+          <dt class="stat-value">{stat.value}</dt>
+          <dd class="stat-label">{pick(stat.label, locale)}</dd>
+        </div>
+      ))
+    }
+  </dl>
 </Section>
 
 {/* --- The transformation ----------------------------------------------- */}
@@ -167,15 +166,13 @@ const t = useTranslations(locale);
   }
 
   /* --- Stats -------------------------------------------------------------
-   * Hairlines above each figure rather than a bordered band — the band made
-   * this read like a stats widget bolted onto the page. */
-  .stats {
-    padding-block: clamp(1rem, 3vw, 2rem) clamp(2rem, 4vw, 3rem);
-  }
-
+   * These sit under the three pillars now, as evidence for the claims made
+   * just above them, rather than floating in a band of their own. Hairlines
+   * above each figure, no box. */
   .stats-grid {
     display: grid;
     gap: 2rem;
+    margin: clamp(3rem, 6vw, 4.5rem) 0 0;
   }
 
   @media (width >= 40rem) {
