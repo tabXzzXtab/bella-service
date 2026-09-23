@@ -28,9 +28,17 @@ const TEST_ENDPOINTS: Record<RequestKind, string> = {
   detailed: 'https://meggamind.app.n8n.cloud/webhook-test/med%20upgifter',
 };
 
+/**
+ * `||` rather than `??`, and the difference matters in CI.
+ *
+ * GitHub Actions substitutes an unset `vars.X` as an empty string, not as
+ * undefined — and `'' ?? fallback` keeps the empty string. That shipped a
+ * build with no endpoint at all, so the form posted to /api/kontakt, which
+ * does not exist on a static host. An empty value means "not configured".
+ */
 export const requestWebhooks: Record<RequestKind, string> = {
-  simple: import.meta.env.PUBLIC_WEBHOOK_QUOTE_SIMPLE ?? TEST_ENDPOINTS.simple,
-  detailed: import.meta.env.PUBLIC_WEBHOOK_QUOTE_DETAILED ?? TEST_ENDPOINTS.detailed,
+  simple: import.meta.env.PUBLIC_WEBHOOK_QUOTE_SIMPLE || TEST_ENDPOINTS.simple,
+  detailed: import.meta.env.PUBLIC_WEBHOOK_QUOTE_DETAILED || TEST_ENDPOINTS.detailed,
 };
 
 /**
@@ -40,13 +48,15 @@ export const requestWebhooks: Record<RequestKind, string> = {
  * a phone number, a property address and a written message — and its
  * confirmation e-mail has to reflect all of it.
  *
- * ⚠ Setting this sends the form straight from the browser to n8n and
- * bypasses /api/kontakt, which is where the server-side honeypot, the rate
- * limiter and the SMTP send live. To put the form back on SMTP, set
- * PUBLIC_CONTACT_WEBHOOK to an empty string.
+ * ⚠ This sends the form straight from the browser to n8n and bypasses
+ * /api/kontakt, where the server-side honeypot, the rate limiter and the SMTP
+ * send live. That endpoint only exists when the site runs on the Node adapter;
+ * on a static host there is nothing there at all, which is why this falls back
+ * to a real URL rather than to an empty string. To put the form back on SMTP,
+ * delete the fallback below — not by setting the variable empty.
  */
 export const contactWebhook: string =
-  import.meta.env.PUBLIC_CONTACT_WEBHOOK ?? 'https://meggamind.app.n8n.cloud/webhook-test/kontakt';
+  import.meta.env.PUBLIC_CONTACT_WEBHOOK || 'https://meggamind.app.n8n.cloud/webhook-test/kontakt';
 
 /** Hours the confirmation e-mail promises. Used by the copy and the payload. */
 export const RESPONSE_HOURS = 48;

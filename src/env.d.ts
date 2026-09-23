@@ -25,6 +25,8 @@ interface ImportMetaEnv {
    * When set, the form bypasses /api/kontakt entirely, which is what lets it
    * work on a static host. The URL is visible in the page source, so the
    * receiving workflow must validate and rate-limit for itself.
+   *
+   * An empty value counts as unset: see the note in src/data/webhooks.ts.
    */
   readonly PUBLIC_CONTACT_WEBHOOK?: string;
 

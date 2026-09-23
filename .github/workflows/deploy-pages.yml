@@ -52,10 +52,14 @@ jobs:
           # and hreflang, and the sub-path for every internal link.
           SITE_URL: ${{ steps.pages.outputs.origin }}
           BASE_PATH: ${{ steps.pages.outputs.base_path }}/
-          # Optional. Set this as a repository variable (Settings → Secrets and
-          # variables → Actions → Variables) to point the form at an n8n
-          # webhook. Left empty the form has nowhere to post on Pages.
+          # All three are optional overrides, set as repository variables
+          # (Settings → Secrets and variables → Actions → Variables). Unset,
+          # Actions substitutes an empty string and the site falls back to the
+          # defaults in src/data/webhooks.ts — which are n8n TEST URLs. Set
+          # these to the /webhook/ production URLs before launch.
           PUBLIC_CONTACT_WEBHOOK: ${{ vars.PUBLIC_CONTACT_WEBHOOK }}
+          PUBLIC_WEBHOOK_QUOTE_SIMPLE: ${{ vars.PUBLIC_WEBHOOK_QUOTE_SIMPLE }}
+          PUBLIC_WEBHOOK_QUOTE_DETAILED: ${{ vars.PUBLIC_WEBHOOK_QUOTE_DETAILED }}
         run: npm run build
 
       - name: Upload artifact
