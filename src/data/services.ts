@@ -4,17 +4,26 @@ import type { IconName } from '../lib/icons';
 /**
  * The six services listed on /tjanster and /services.
  *
- * Copy and pricing come from the client's `Bussiness-info.md`. The prices are
- * "från" figures — a starting rate, never a quote. Anywhere a price is rendered
- * it must keep that qualifier; see `formatPrice` below, which builds it in.
+ * Copy comes from the client's `Bussiness-info.md`.
+ *
+ * ⚠ There are no prices here, and there must not be. The client asked for
+ * every figure off the site: services are presented on what they are, and a
+ * price comes from a request. `Bussiness-info.md` still records the old
+ * "från" rates — it is the client's own document and stays as it was — but
+ * nothing under src/ reads them, and nothing should start.
  *
  * To add a service: append an entry. Nothing else needs editing — the pages
  * iterate this array. `featured: true` also puts it on the start page.
  */
 
-export type PriceUnit = 'sqm' | 'panel';
-
-export type ServicePrice = { kind: 'free' } | { kind: 'from'; amount: number; unit: PriceUnit };
+/**
+ * What a job is measured in.
+ *
+ * This is all the price-request panel needs: it asks for an area or a panel
+ * count so the enquiry arrives with a size attached, never for money. `none`
+ * is work that is not measured at all — the inspection.
+ */
+export type Measure = 'sqm' | 'panel' | 'none';
 
 export interface Service {
   /** Stable id, used as the key and as an anchor target. */
@@ -24,7 +33,8 @@ export interface Service {
   summary: Record<Locale, string>;
   /** Concrete selling points. Keep to exactly 3 — this is a scan-list. */
   bullets: Record<Locale, string[]>;
-  price: ServicePrice;
+  /** What a request for this service is quantified in. */
+  measure: Measure;
   /** Show on the start page. */
   featured: boolean;
 }
@@ -34,7 +44,7 @@ export const services: readonly Service[] = [
     id: 'taktvatt',
     icon: 'roof',
     featured: true,
-    price: { kind: 'from', amount: 39, unit: 'sqm' },
+    measure: 'sqm',
     title: { sv: 'Taktvätt', en: 'Roof cleaning' },
     summary: {
       sv: 'Skonsam tvätt som tar bort mossa, alger och lav. Rätt utförd förlänger den livslängden på taket med upp till 15 år.',
@@ -49,7 +59,7 @@ export const services: readonly Service[] = [
     id: 'takmalning',
     icon: 'brush',
     featured: true,
-    price: { kind: 'from', amount: 129, unit: 'sqm' },
+    measure: 'sqm',
     title: { sv: 'Takmålning', en: 'Roof painting' },
     summary: {
       sv: 'Professionell målning med långtidshållbar takfärg. Taket får ett nytt utseende och ett skydd mot vädret som håller.',
@@ -64,7 +74,7 @@ export const services: readonly Service[] = [
     id: 'algbehandling',
     icon: 'leaf',
     featured: true,
-    price: { kind: 'from', amount: 25, unit: 'sqm' },
+    measure: 'sqm',
     title: { sv: 'Algbehandling', en: 'Algae treatment' },
     summary: {
       sv: 'Långtidsverkande behandling som hindrar mossa och alger från att komma tillbaka i upp till fem år.',
@@ -79,7 +89,7 @@ export const services: readonly Service[] = [
     id: 'solpanelstvatt',
     icon: 'solar',
     featured: true,
-    price: { kind: 'from', amount: 49, unit: 'panel' },
+    measure: 'panel',
     title: { sv: 'Solpanelstvätt', en: 'Solar panel cleaning' },
     summary: {
       sv: 'Rena paneler producerar upp till 30 % mer el. Vi tvättar repfritt med avjoniserat vatten, utan kemikalier.',
@@ -94,7 +104,7 @@ export const services: readonly Service[] = [
     id: 'takbesiktning',
     icon: 'drone',
     featured: true,
-    price: { kind: 'free' },
+    measure: 'none',
     title: { sv: 'Takbesiktning', en: 'Roof inspection' },
     summary: {
       sv: 'Vi går igenom taket, fotodokumenterar med drönare och lämnar en tydlig åtgärdsplan med fast pris. Utan förpliktelse.',
@@ -109,7 +119,7 @@ export const services: readonly Service[] = [
     id: 'fasadtvatt',
     icon: 'facade',
     featured: false,
-    price: { kind: 'from', amount: 35, unit: 'sqm' },
+    measure: 'sqm',
     title: { sv: 'Fasadtvätt', en: 'Facade cleaning' },
     summary: {
       sv: 'Fräschar upp putsade och målade fasader. Vi tar bort smuts, alger och sot varsamt, med rätt tryck för materialet.',
@@ -130,40 +140,5 @@ export function serviceById(id: string): Service | undefined {
   return services.find((service) => service.id === id);
 }
 
-const UNIT_LABEL: Record<PriceUnit, Record<Locale, string>> = {
-  sqm: { sv: 'kr/m²', en: 'SEK/m²' },
-  panel: { sv: 'kr/panel', en: 'SEK/panel' },
-};
-
-const FROM_LABEL: Record<Locale, string> = { sv: 'Från', en: 'From' };
-const FREE_LABEL: Record<Locale, string> = { sv: 'Kostnadsfritt', en: 'Free of charge' };
-
-/**
- * Renders a price for display. Always carries the "Från" qualifier, so no
- * caller can accidentally present a starting rate as a firm quote.
- */
-export function formatPrice(price: ServicePrice, locale: Locale): string {
-  if (price.kind === 'free') return FREE_LABEL[locale];
-  return `${FROM_LABEL[locale]} ${price.amount} ${UNIT_LABEL[price.unit][locale]}`;
-}
-
-/** The numeral on its own, for skins that set the figure at display size. */
-export function priceParts(
-  price: ServicePrice,
-  locale: Locale,
-): { from: string | null; amount: string; unit: string | null } {
-  if (price.kind === 'free') {
-    return { from: null, amount: FREE_LABEL[locale], unit: null };
-  }
-  return {
-    from: FROM_LABEL[locale],
-    amount: String(price.amount),
-    unit: UNIT_LABEL[price.unit][locale],
-  };
-}
-
-/** Services the m² estimator can price. Excludes the free inspection. */
-export const estimatorServices = services.filter(
-  (service): service is Service & { price: Extract<ServicePrice, { kind: 'from' }> } =>
-    service.price.kind === 'from',
-);
+/** Services the price-request panel can take a quantity for. */
+export const quotableServices = services.filter((service) => service.measure !== 'none');

@@ -1,7 +1,8 @@
 ---
 import BeforeAfter from '../BeforeAfter.astro';
 import Button from '../Button.astro';
-import Estimator from '../Estimator.astro';
+import EmailCapture from '../EmailCapture.astro';
+import PriceRequest from '../PriceRequest.astro';
 import LogoCloud from '../LogoCloud.astro';
 import Placeholder from '../Placeholder.astro';
 import Section from '../Section.astro';
@@ -15,9 +16,13 @@ import type { Locale } from '../../i18n/config';
  * The start page.
  *
  * Sequenced as an argument: what we protect (hero) → that we have done it
- * before (stats) → why it matters (mission) → proof (before/after) → what it
- * costs (services, estimator) → the free way in (CTA). Every section points at
- * the free inspection, which is the only conversion goal on this site.
+ * before (stats) → why it matters (mission) → proof (before/after) → what we
+ * do (services) → how to ask what it costs (price request) → the free way in
+ * (CTA). Every section points at the free inspection, which is the only
+ * conversion goal on this site.
+ *
+ * No prices anywhere on this page, by the client's instruction. Services are
+ * presented on what they are; a figure comes from a person, after a request.
  */
 interface Props {
   locale: Locale;
@@ -30,21 +35,38 @@ const t = useTranslations(locale);
 {/* --- Hero ------------------------------------------------------------- */}
 <section class="hero">
   <div class="container-page">
+    {
+      /* The landing screen. Every element of it carries `enter`, staggered a
+        beat apart, so the first screen assembles instead of appearing. The
+        delays are multiples of one token, not hand-picked numbers. */
+    }
     <div class="hero-copy">
-      <p class="label">{t('home.hero.eyebrow')}</p>
-      <h1>{t('home.hero.title')}</h1>
-      <p class="lead">{t('home.hero.lead')}</p>
-      <div class="hero-actions">
-        <Button href={path('contact', locale)} variant="accent" size="lg">
-          {t('common.getQuote')}
-        </Button>
+      <p class="label enter" style="--enter-delay:calc(var(--enter-stagger) * 2)">
+        {t('home.hero.eyebrow')}
+      </p>
+      <h1 class="enter" style="--enter-delay:calc(var(--enter-stagger) * 3)">
+        {t('home.hero.title')}
+      </h1>
+      <p class="lead enter" style="--enter-delay:calc(var(--enter-stagger) * 4)">
+        {t('home.hero.lead')}
+      </p>
+      <div class="hero-actions enter" style="--enter-delay:calc(var(--enter-stagger) * 5)">
+        <EmailCapture
+          locale={locale}
+          kind="simple"
+          id="hero"
+          label={t('common.getQuote')}
+          variant="accent"
+          size="lg"
+          fallbackHref={path('contact', locale)}
+        />
         <Button href={path('process', locale)} variant="ghost" size="lg">
           {t('nav.process')}
         </Button>
       </div>
     </div>
 
-    <div class="hero-media">
+    <div class="hero-media enter" style="--enter-delay:calc(var(--enter-stagger) * 4)">
       <Placeholder id="homeHero" locale={locale} radius="lg" priority />
     </div>
   </div>
@@ -115,11 +137,11 @@ const t = useTranslations(locale);
   </p>
 </Section>
 
-{/* --- Estimator -------------------------------------------------------- */}
-<Section tone="sunk" label={t('estimator.eyebrow')} title={t('estimator.title')}>
-  <div class="est-wrap reveal">
-    <Estimator locale={locale} />
-    <p class="est-aside lead">{t('estimator.lead')}</p>
+{/* --- Price request ---------------------------------------------------- */}
+<Section tone="sunk" label={t('priceRequest.eyebrow')} title={t('priceRequest.title')}>
+  <div class="pr-wrap reveal">
+    <PriceRequest locale={locale} />
+    <p class="pr-aside lead">{t('priceRequest.lead')}</p>
   </div>
 </Section>
 
@@ -268,21 +290,21 @@ const t = useTranslations(locale);
     border-bottom-color: var(--accent);
   }
 
-  /* --- Estimator --------------------------------------------------------- */
-  .est-wrap {
+  /* --- Price request ------------------------------------------------------ */
+  .pr-wrap {
     display: grid;
     gap: 2rem;
     align-items: start;
   }
 
   @media (width >= 62rem) {
-    .est-wrap {
+    .pr-wrap {
       grid-template-columns: 1fr 0.7fr;
       gap: 4rem;
     }
   }
 
-  .est-aside {
+  .pr-aside {
     max-width: 32ch;
   }
 

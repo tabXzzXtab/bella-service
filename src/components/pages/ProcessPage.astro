@@ -38,7 +38,7 @@ const t = useTranslations(locale);
 {/* --- Hero ------------------------------------------------------------- */}
 <section class="ph">
   <div class="container-page">
-    <div class="ph-copy">
+    <div class="ph-copy enter" style="--enter-delay:calc(var(--enter-stagger) * 2)">
       <p class="label">{t('process.hero.eyebrow')}</p>
       <h1>{t('process.hero.title')}</h1>
       <div class="ph-lead">
@@ -49,21 +49,9 @@ const t = useTranslations(locale);
     </div>
   </div>
 
-  <div class="container-page ph-media">
-    <Placeholder id="heroRoof" locale={locale} radius="lg" priority />
+  <div class="container-page ph-media enter" style="--enter-delay:calc(var(--enter-stagger) * 3)">
+    <Placeholder id="roofClean" locale={locale} radius="lg" priority />
   </div>
-</section>
-
-{
-  /* --- The work itself, edge to edge -------------------------------------
-     Sits here, directly under the hero, because it is the only thing on the
-     page that shows the job actually happening. It carries no caption: the
-     clip states the method on its own, and the copy that used to float over
-     it argued against high pressure while the company's own footage shows
-     water under pressure. --------------------------------------------------- */
-}
-<section class="ph-band">
-  <FullBleedFigure media="roofWashWide" locale={locale} />
 </section>
 
 {/* --- The timeline ------------------------------------------------------ */}
@@ -74,23 +62,37 @@ const t = useTranslations(locale);
 {/* --- The one big word -------------------------------------------------- */}
 <section class="ph-giant">
   <div class="container-page">
+    {
+      /* The foam still moved to the "Vi utför arbetet" step, where it argues
+        for the gentle method. The word here is "Rent." / "Clean.", so the
+        inset is the cleaned surface itself — the after half of the start
+        page's slider, which is the only finished-clean close-up there is. */
+    }
     <GiantWord
       word={t('process.giantWord')}
       note={t('process.giantWord.note')}
-      media="rentFoam"
+      media="transformAfter"
       locale={locale}
     />
   </div>
 </section>
 
-{/* --- Finished ---------------------------------------------------------- */}
+{
+  /* --- Finished -----------------------------------------------------------
+     The only full-bleed band left, and now an undressed photograph. A second
+     one sat directly under the hero holding the sole work-in-progress frame
+     the client had; at full width it cropped to a close-up of a respirator
+     with no roof in it, so it is gone rather than re-cropped. The hero now
+     meets the timeline directly. ------------------------------------------- */
+}
 <section class="ph-band">
-  <FullBleedFigure
-    media="finishedJob"
-    locale={locale}
-    overlayTitle={t('process.welcome.title')}
-    overlayNote={t('process.welcome.note')}
-  />
+  {
+    /* No overlay and no height cap, by the client's instruction: the band is
+      the photograph and nothing else. Dropping the overlay also drops the
+      scrim that existed to keep white text legible over it, and the cap would
+      have magnified an already-panoramic frame rather than shortening it. */
+  }
+  <FullBleedFigure media="finishedJob" locale={locale} capHeight={false} />
 </section>
 
 {

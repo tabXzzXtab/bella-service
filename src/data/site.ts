@@ -61,7 +61,12 @@ export const site = {
     href: '+46733987868',
   },
 
-  email: 'info@bellaservice.se',
+  /**
+   * The mailbox the site publishes. Note the domain: the company's site is
+   * bellaserviceab.se, and the old info@bellaservice.se was a different domain
+   * the company does not own — mail to it was going nowhere.
+   */
+  email: 'Kim@bellaserviceab.se',
 
   /** Registered address. Appears in the footer and in structured data. */
   address: {

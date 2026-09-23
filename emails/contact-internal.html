@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nytt meddelande från kontaktformuläret — Bella Service</title>
+    <!--
+      Den interna kopian av kontaktformuläret, till Kim@bellaserviceab.se.
+
+      Systerfil till internal-notification.html, som är den interna kopian av
+      en prisförfrågan. Skillnaden är innehållet: här finns namn, telefon,
+      fastighet och ett skrivet meddelande. Meddelandet står sist och orört,
+      eftersom det är det enda fält kunden formulerat själv.
+
+      Sätt Reply-To till {{ $json.email }} i n8n, så att Svara gör rätt sak.
+    -->
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f4f2ee; -webkit-text-size-adjust: 100%">
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0">
+      {{ $json.name }} — {{ $json.subject || 'Kontaktformuläret' }}
+    </div>
+
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="background-color: #f4f2ee; padding: 24px 16px"
+    >
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="
+              width: 100%;
+              max-width: 600px;
+              background-color: #ffffff;
+              border-radius: 14px;
+              overflow: hidden;
+            "
+          >
+            <tr>
+              <td
+                style="
+                  background-color: #1f3a5f;
+                  padding: 18px 28px;
+                  font-family:
+                    Inter,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    'Segoe UI',
+                    Helvetica,
+                    Arial,
+                    sans-serif;
+                  font-size: 15px;
+                  font-weight: 600;
+                  color: #ffffff;
+                "
+              >
+                Nytt meddelande från webben
+              </td>
+            </tr>
+            <tr>
+              <td style="height: 3px; background-color: #e8701a; font-size: 0; line-height: 0">
+                &nbsp;
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  padding: 26px 28px 6px;
+                  font-family:
+                    Inter,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    'Segoe UI',
+                    Helvetica,
+                    Arial,
+                    sans-serif;
+                "
+              >
+                <p style="margin: 0 0 4px; font-size: 13px; color: #8b929c">Svara senast</p>
+                <p
+                  style="
+                    margin: 0 0 22px;
+                    font-size: 22px;
+                    font-weight: 500;
+                    color: #b04c06;
+                    letter-spacing: -0.01em;
+                  "
+                >
+                  {{ $json.respondByLocal }}
+                </p>
+
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  style="
+                    font-family:
+                      Inter,
+                      -apple-system,
+                      BlinkMacSystemFont,
+                      'Segoe UI',
+                      Helvetica,
+                      Arial,
+                      sans-serif;
+                    font-size: 15px;
+                  "
+                >
+                  <tr>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        color: #8b929c;
+                        width: 34%;
+                      "
+                    >
+                      Namn
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        color: #16191f;
+                        font-weight: 500;
+                      "
+                    >
+                      {{ $json.name }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        color: #8b929c;
+                        width: 34%;
+                      "
+                    >
+                      Telefon
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        color: #16191f;
+                        font-weight: 500;
+                      "
+                    >
+                      <a href="tel:{{ $json.phone }}" style="color: #16191f; text-decoration: none"
+                        >{{ $json.phone }}</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        color: #8b929c;
+                        width: 34%;
+                      "
+                    >
+                      E-post
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        color: #16191f;
+                        font-weight: 500;
+                      "
+                    >
+                      <a
+                        href="mailto:{{ $json.email }}"
+                        style="color: #16191f; text-decoration: none"
+                        >{{ $json.email }}</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        color: #8b929c;
+                        width: 34%;
+                      "
+                    >
+                      Fastighet
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        color: #16191f;
+                        font-weight: 500;
+                      "
+                    >
+                      {{ $json.propertyAddress || '—' }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        color: #8b929c;
+                        width: 34%;
+                      "
+                    >
+                      Tjänst
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        color: #16191f;
+                        font-weight: 500;
+                      "
+                    >
+                      {{ $json.subject || '—' }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        border-bottom: 1px solid #e7e4df;
+                        color: #8b929c;
+                        width: 34%;
+                      "
+                    >
+                      Språk
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        border-bottom: 1px solid #e7e4df;
+                        color: #16191f;
+                        font-weight: 500;
+                      "
+                    >
+                      {{ $json.locale }}
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin: 22px 0 8px; font-size: 13px; color: #8b929c">Meddelande</p>
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  style="background-color: #fbfaf8; border-radius: 10px"
+                >
+                  <tr>
+                    <td
+                      style="
+                        padding: 16px 18px;
+                        font-family:
+                          Inter,
+                          -apple-system,
+                          BlinkMacSystemFont,
+                          'Segoe UI',
+                          Helvetica,
+                          Arial,
+                          sans-serif;
+                        font-size: 15px;
+                        line-height: 1.6;
+                        color: #16191f;
+                        white-space: pre-wrap;
+                      "
+                    >
+                      {{ $json.message }}
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  padding: 22px 28px 30px;
+                  font-family:
+                    Inter,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    'Segoe UI',
+                    Helvetica,
+                    Arial,
+                    sans-serif;
+                "
+              >
+                <a
+                  href="mailto:{{ $json.email }}"
+                  style="
+                    display: inline-block;
+                    background-color: #e8701a;
+                    color: #ffffff;
+                    font-size: 15px;
+                    font-weight: 500;
+                    text-decoration: none;
+                    padding: 12px 20px;
+                    border-radius: 999px;
+                  "
+                >
+                  Svara {{ $json.name }}
+                </a>
+                <a
+                  href="tel:{{ $json.phone }}"
+                  style="
+                    display: inline-block;
+                    margin-left: 10px;
+                    color: #b04c06;
+                    font-size: 15px;
+                    font-weight: 500;
+                    text-decoration: underline;
+                    padding: 12px 0;
+                  "
+                >
+                  Ring istället
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

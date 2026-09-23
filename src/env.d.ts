@@ -38,6 +38,20 @@ interface ImportMetaEnv {
    */
   readonly CONTACT_WEBHOOK?: string;
 
+  /**
+   * The two n8n webhooks the inline quote request posts to, straight from the
+   * browser. PUBLIC_ so they are readable client-side.
+   *
+   * SIMPLE receives an e-mail address and nothing else — the start page hero.
+   * DETAILED also carries the service and the area — the price-request panel.
+   *
+   * Both default to the client's n8n TEST endpoints, which only answer once
+   * per "Execute workflow" click. Set these to the /webhook/ production URLs
+   * before launch. See emails/README.md.
+   */
+  readonly PUBLIC_WEBHOOK_QUOTE_SIMPLE?: string;
+  readonly PUBLIC_WEBHOOK_QUOTE_DETAILED?: string;
+
   /** SMTP transport for the contact form. All five are required together. */
   readonly SMTP_HOST?: string;
   readonly SMTP_PORT?: string;

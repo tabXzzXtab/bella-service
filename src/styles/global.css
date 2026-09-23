@@ -78,11 +78,32 @@
   --measure: 62ch;
 
   /* --- Motion ------------------------------------------------------------
-   * One curve, short durations. Movement should be barely noticed. */
+   * One curve, short durations. Movement should be barely noticed.
+   *
+   * --ease is interface feedback: a hover, a border, a panel. --ease-entrance
+   * is for arrivals, and it is the only curve on the site allowed to take its
+   * time. Nothing here is a hard-coded value in a component; every animation
+   * on the site resolves through these. */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-fast: 150ms;
   --dur: 260ms;
   --dur-slow: 620ms;
+
+  --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* First paint. Long, because this is the one moment the page makes an
+   * entrance; --enter-stagger is the gap between one element and the next. */
+  --dur-enter: 1100ms;
+  --enter-stagger: 90ms;
+  --enter-travel: 2rem;
+  --enter-scale: 0.965;
+  --enter-blur: 10px;
+
+  /* Scroll reveal. Further than it used to travel, still short of a stunt. */
+  --reveal-travel: 1.5rem;
+
+  /* The curtain that covers a page change. */
+  --dur-curtain: 520ms;
 }
 
 @utility container-page {
@@ -361,15 +382,21 @@
   }
 
   /* --- Scroll reveal -----------------------------------------------------
-   * Deliberately slight: a few pixels and a fade. Anything more is motion for
-   * its own sake. Applied only when JS runs, so the page is never blank
-   * without it. */
+   * A rise and a fade on the entrance curve. It used to move 14px on the
+   * interface curve, which read as a twitch rather than as settling; the
+   * client asked for something with more presence, so it travels further and
+   * eases out longer. No scale and no blur here on purpose — a reveal fires
+   * on dozens of elements per page, several of them full-bleed, and both of
+   * those force expensive repaints on a mid-range phone. They belong to the
+   * entrance below, which plays once on a handful of elements.
+   *
+   * Applied only when JS runs, so the page is never blank without it. */
   .js .reveal {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translate3d(0, var(--reveal-travel), 0);
     transition:
-      opacity var(--dur-slow) var(--ease),
-      transform var(--dur-slow) var(--ease);
+      opacity var(--dur-slow) var(--ease-entrance),
+      transform var(--dur-slow) var(--ease-entrance);
     transition-delay: var(--reveal-delay, 0ms);
   }
 
@@ -378,10 +405,149 @@
     transform: none;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .js .reveal {
+  /* --- Entrance ----------------------------------------------------------
+   * The first screen, on arrival. Deliberately bigger than the scroll reveal:
+   * rising, unblurring and settling up from a slight scale.
+   *
+   * A keyframe animation rather than a transition, and deliberately so. A
+   * transition needs something to flip it, which means the entrance would
+   * depend on the JavaScript bundle arriving — and if that request failed,
+   * the first screen would stay invisible permanently. `animation-fill-mode:
+   * both` holds the opening frame through the delay and the closing frame
+   * afterwards, so the same effect needs no script at all.
+   *
+   * The one gate left is `.js`, set by an inline script in <head> before
+   * first paint, so a browser with scripting off never meets a hidden page.
+   *
+   * `--enter-delay` is set per element to stagger a group. */
+  .js .enter {
+    animation: enter-in var(--dur-enter) var(--ease-entrance) var(--enter-delay, 0ms) both;
+  }
+
+  @keyframes enter-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, var(--enter-travel), 0) scale(var(--enter-scale));
+      filter: blur(var(--enter-blur));
+    }
+
+    to {
       opacity: 1;
       transform: none;
+      filter: none;
+    }
+  }
+
+  /* --- Scroll progress ---------------------------------------------------
+   * A hairline above the header showing how far down the page you are. It is
+   * scaled from the left on the compositor rather than animating width, so it
+   * never triggers layout while scrolling. */
+  .scroll-progress {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    height: 2px;
+    /* Above the sticky header, which is 80. At 60 it was painted behind the
+       header and invisible for the whole page. */
+    z-index: 90;
+    pointer-events: none;
+    background-color: transparent;
+  }
+
+  .scroll-progress span {
+    display: block;
+    height: 100%;
+    background-color: var(--accent);
+    transform: scaleX(var(--scroll-progress, 0));
+    transform-origin: 0 50%;
+  }
+
+  /* --- Page-change curtain -----------------------------------------------
+   * Covers the gap between clicking a link and the next document painting.
+   * It rises from the bottom, holds, and is simply gone when the new page
+   * arrives, because that page is a new document.
+   *
+   * It is inert until `.is-leaving` lands, so it can never swallow a click. */
+  .curtain {
+    position: fixed;
+    inset: 0;
+    /* Over everything that is part of the page: the header (80), the mobile
+       action bar (60) and the progress hairline (90). It was 80, which only
+       beat the header because it happens to come later in the body — that is
+       a tie decided by DOM order, not a stacking decision. */
+    z-index: 150;
+    pointer-events: none;
+    visibility: hidden;
+    background-color: var(--navy);
+    transform: translate3d(0, 100%, 0);
+    transition:
+      transform var(--dur-curtain) var(--ease-entrance),
+      visibility 0s linear var(--dur-curtain);
+  }
+
+  .is-leaving .curtain {
+    visibility: visible;
+    transform: none;
+    transition:
+      transform var(--dur-curtain) var(--ease-entrance),
+      visibility 0s;
+  }
+
+  /* A hairline that draws itself across the curtain while it is up — the
+     only thing on it, so the pause reads as deliberate rather than stalled. */
+  .curtain-line {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    width: min(18rem, 46vw);
+    height: 1px;
+    translate: -50% 0;
+    background-color: rgb(255 255 255 / 0.25);
+    overflow: hidden;
+  }
+
+  .curtain-line::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: var(--accent);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+
+  .is-leaving .curtain-line::after {
+    animation: curtain-draw var(--dur-enter) var(--ease-entrance) forwards;
+  }
+
+  @keyframes curtain-draw {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  /* --- Reduced motion ----------------------------------------------------
+   * Everything above is decoration over content that is already there, so
+   * switching it off costs nothing. The curtain keeps its colour but stops
+   * sliding, and the script does not arm it at all. */
+  @media (prefers-reduced-motion: reduce) {
+    .js .reveal,
+    .js .enter {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+
+    .js .enter {
+      animation: none;
+    }
+
+    .curtain {
+      transition: none;
+    }
+
+    .is-leaving .curtain-line::after {
+      animation: none;
+      transform: scaleX(1);
     }
   }
 

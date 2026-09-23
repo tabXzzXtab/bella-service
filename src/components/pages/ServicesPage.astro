@@ -8,11 +8,12 @@ import { path, useTranslations } from '../../i18n/utils';
 import type { Locale } from '../../i18n/config';
 
 /**
- * The services page — all six, with their starting prices.
+ * The services page — all six, on what they are.
  *
- * The prices are why this page converts: someone comparing roof cleaners wants
- * to know what it costs, and most competitors make them fill in a form to find
- * out. Publishing a "från" rate answers the question and earns the enquiry.
+ * It used to carry a "från" rate per service. The client has since asked for
+ * every figure off the site, so the cards now sell on the work and what is
+ * included, and the price-request panel on the start page is how a visitor
+ * asks what theirs would cost.
  */
 interface Props {
   locale: Locale;
@@ -49,7 +50,13 @@ const t = useTranslations(locale);
         {t('common.bookInspection')}
       </Button>
     </div>
-    <Placeholder id="taktvattWork" locale={locale} radius="lg" />
+    {
+      /* A roof, because the heading beside it asks what your roof needs. This
+        was the taktvätt foam still, which is a photograph of a driveway — it
+        argues for the gentle method on the process page, but next to roof
+        copy it simply read as the wrong picture. */
+    }
+    <Placeholder id="roofClean" locale={locale} radius="lg" />
   </div>
 </Section>
 

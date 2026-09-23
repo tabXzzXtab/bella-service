@@ -84,6 +84,10 @@ const structuredData = {
   hasOfferCatalog: {
     '@type': 'OfferCatalog',
     name: pick({ sv: 'Tjänster', en: 'Services' }, locale),
+    // An Offer with no price is still valid: it says the service is offered,
+    // not what it costs. Do not add a price back — structured data is
+    // published pricing, it just happens to be aimed at Google rather than at
+    // the visitor.
     itemListElement: services.map((service) => ({
       '@type': 'Offer',
       itemOffered: {
@@ -91,18 +95,6 @@ const structuredData = {
         name: pick(service.title, locale),
         description: pick(service.summary, locale),
       },
-      ...(service.price.kind === 'from'
-        ? {
-            priceSpecification: {
-              '@type': 'UnitPriceSpecification',
-              price: service.price.amount,
-              priceCurrency: 'SEK',
-              unitText: service.price.unit === 'sqm' ? 'm2' : 'panel',
-              // "från" pricing — say so, rather than publish it as firm.
-              valueAddedTaxIncluded: false,
-            },
-          }
-        : { price: 0, priceCurrency: 'SEK' }),
     })),
   },
 };

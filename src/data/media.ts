@@ -31,7 +31,7 @@ export const STYLE_DNA =
   'shot on 35mm, overcast Scandinavian daylight, muted terracotta and slate palette, ' +
   'natural texture, no people looking at camera, no text, no logos, no watermark, photorealistic';
 
-export type AspectRatio = '2:1' | '3:2' | '4:3' | '16:9' | '1:1' | '4:5';
+export type AspectRatio = '4:1' | '2:1' | '3:2' | '4:3' | '16:9' | '1:1' | '4:5';
 
 export interface MediaSlot {
   id: string;
@@ -57,6 +57,8 @@ export interface MediaSlot {
 
 /** Aspect ratio as a CSS `aspect-ratio` value. */
 export const ASPECT_CSS: Record<AspectRatio, string> = {
+  /* A letterbox strip, for a frame that was cropped panoramic to begin with. */
+  '4:1': '4 / 1',
   '2:1': '2 / 1',
   '3:2': '3 / 2',
   '4:3': '4 / 3',
@@ -67,6 +69,20 @@ export const ASPECT_CSS: Record<AspectRatio, string> = {
 
 /** Said instead of a generation prompt for anything the client photographed. */
 const REAL = 'not generated — this is a real photograph supplied by the client';
+
+/**
+ * Appended to the brief of every slot that used to hold a shot of someone
+ * working at height with nothing holding them on.
+ *
+ * Those files are deleted, not merely unreferenced, so a future edit cannot
+ * quietly point a slot back at one.
+ */
+const SAFETY =
+  '⚠ The shot that used to sit here showed a worker on a roof with no harness, ' +
+  'no line and no edge protection. It is gone on purpose. Nothing goes in this ' +
+  'slot that shows someone working at height without visible fall protection — ' +
+  "it advertises an unsafe method as the company's own practice, and it is the " +
+  'first thing an arbetsmiljö complaint would cite.';
 
 export const media = {
   // ───────────────────────────────────────────────────────────────────────
@@ -111,74 +127,51 @@ export const media = {
     prompt: REAL,
   },
 
-  /** Process page hero. Sits directly under "Från mossigt till klart". */
-  heroRoof: {
-    id: 'heroRoof',
-    src: '/media/process-hero.jpg',
+  /**
+   * A whole finished roof. Used on two different pages: the process page
+   * hero, and the "Osäker på vad ditt tak behöver?" closer on the services
+   * page. Named for its subject rather than for one slot, because both slots
+   * want the same thing — the roof the copy beside them is talking about.
+   */
+  roofClean: {
+    id: 'roofClean',
+    src: '/media/roof-brick-house.jpg',
     aspect: '3:2',
     alt: {
-      sv: 'Mossbelagt skiffertak som tvättas — mossan ligger kvar ovanför, pannorna är rena nedanför',
-      en: 'A moss-covered slate roof being washed — moss still above, clean tiles below',
+      sv: 'Rent tak på ett rött tegelhus, med skorsten mot klarblå himmel',
+      en: 'A clean roof on a red brick house, its chimney against a clear blue sky',
     },
     brief:
-      "Client photograph. Chosen for this slot because the frame contains the page's own headline: the untouched moss field, the washed tiles and the lance, all at once.",
+      'Client photograph. A whole roof, finished and empty of people, which is what the page is actually about — and it opens the page on the result rather than on the labour. ' +
+      SAFETY,
     prompt: REAL,
   },
 
-  /** Process page, lapping the corner of the single word "Rent." */
-  rentFoam: {
-    id: 'rentFoam',
-    src: '/media/rent-foam.jpg',
-    aspect: '4:5',
-    alt: {
-      sv: 'Rengöringsskum som ligger över en stenlagd gång under tvätt',
-      en: 'Cleaning foam lying across block paving during a wash',
-    },
-    brief:
-      'Client photograph, chosen by the client for this exact spot — their file for it is even named Rent. Cropped portrait because it laps the corner of a very large word, where a tall narrow frame sits better than a wide one. Two things to know: it is paving rather than a roof, and the agent is still foaming on the surface, so it shows cleaning under way beside a word that says it is done.',
-    prompt: REAL,
-  },
-
-  /** Process page, the full-bleed band directly under the hero. */
-  roofWashWide: {
-    id: 'roofWashWide',
-    src: '/media/roof-wash-wide.jpg',
-    video: '/media/roof-wash-wide.mp4',
-    aspect: '2:1',
-    alt: {
-      sv: 'Mossa som spolas av ett skiffertak — den rena ytan breder ut sig bakom lansen',
-      en: 'Moss being rinsed off a slate roof, the clean surface spreading out behind the lance',
-    },
-    brief:
-      'Client footage, framed 2:1 for the band. The band runs the full width of the screen with no caption over it, so the frame has to be wide enough to fill it and still hold the moss, the cleaned band and the spray at once. Square phone footage does not survive that crop — most of it becomes sky.',
-    prompt: REAL,
-  },
-
-  /** Process page, the closing "Klart" band. */
+  /** Process page, the closing band. */
   finishedJob: {
     id: 'finishedJob',
-    src: '/media/finished-job.jpg',
-    aspect: '4:3',
+    src: '/media/job-site-wide.jpg',
+    aspect: '4:1',
     alt: {
-      sv: 'Färdigt tak i mättad tegelröd kulör, med Bella Services servicebil på uppfarten',
-      en: "A finished roof in deep terracotta, with Bella Service's van on the driveway",
+      sv: 'Bella Services servicebil vid ett hus, med stege och avspärrning uppställd mot taket',
+      en: "Bella Service's van at a house, with a ladder and cordon set up against the roof",
     },
     brief:
-      'Client photograph. Carries the words "Klart" and "Med garanti på utfört arbete", so it has to be a finished surface rather than work in progress.',
+      'Client photograph, supplied already cropped panoramic — hence the 4:1 slot, which is the only one on the site. It carried the words "Klart" and "Med garanti på utfört arbete" until the client asked for the band to be the photograph and nothing else, so the overlay and the scrim that made it legible are both gone. It is also the one frame that shows the site marked out and the ladder footed, which is the safety story the deleted roof shots told the wrong way round.',
     prompt: REAL,
   },
 
   taktvattWork: {
     id: 'taktvattWork',
-    src: '/media/ridge-treatment.jpg',
-    video: '/media/ridge-treatment.mp4',
+    src: '/media/rent-foam.jpg',
     aspect: '4:3',
     alt: {
-      sv: 'Hantverkare på takryggen som behandlar pannorna med en lågtryckslans',
-      en: 'A worker on the roof ridge treating the tiles with a low-pressure lance',
+      sv: 'Rengöringsmedel som ligger och verkar över en stenlagd yta',
+      en: 'Cleaning agent left to work across a paved surface',
     },
     brief:
-      'Client footage. Sits beside copy about gentle methods and no pressure washing, and the lance laying the agent down is exactly that. Kept compact rather than wide because it plays at a column width, not across the screen.',
+      'Client photograph, and it belongs to exactly one slot: the "Vi utför arbetet" step of the process timeline. It sits beside copy about gentle methods and no pressure washing, and an agent left standing on the surface to do the work over time is that argument in a picture — better than the lance footage it replaced, which showed water under pressure beside a sentence denying it. But the surface is paving, not a roof, so it only works where the copy is about METHOD. It was briefly also on the services page under a heading asking what your roof needs, where it read as a photograph of a driveway next to a sentence about roofs. Do not point roof copy at this file. ' +
+      SAFETY,
     prompt: REAL,
   },
 
@@ -198,45 +191,16 @@ export const media = {
   // ───────────────────────────────────────────────────────────────────────
   // Still to photograph. These render as stand-in panels until a file lands.
   //
-  // droneInspection and processReport are on the process timeline, so they are
-  // visible gaps on a live page — they carry the free-inspection offer, which
-  // is the site's primary conversion path, and nothing in the client's material
-  // shows either the drone or the report.
+  // None of these is placed in a component. They stay here as the shoot list:
+  // four of the six services have no photograph of their own.
   //
-  // heroRoofBefore, takmalningWork, solarPanels and fasadWork are not placed in
-  // any component yet. They stay here as the shoot list: four of the six
-  // services have no photograph of their own.
+  // The drone-inspection and inspection-report stand-ins used to live here and
+  // rendered as grey panels in the process timeline. They are gone: a slot that
+  // ships as an empty box is worse than a step with no picture. Photograph the
+  // drone in the air and the printed report on a table, add the entries back,
+  // and re-attach them in src/data/process.ts — the steps are commented to say
+  // exactly where.
   // ───────────────────────────────────────────────────────────────────────
-
-  droneInspection: {
-    id: 'droneInspection',
-    src: null,
-    aspect: '4:3',
-    alt: {
-      sv: 'Drönare som fotograferar ett tak under en besiktning',
-      en: 'A drone photographing a roof during an inspection',
-    },
-    brief:
-      'A drone in the air, in focus, with a roof soft behind it. This image carries the free-inspection offer, so it needs to look deliberate rather than gimmicky.',
-    prompt:
-      'a small survey drone hovering in sharp focus close to camera, ' +
-      'a tile roof softly out of focus below and behind it, overcast Swedish sky',
-  },
-
-  processReport: {
-    id: 'processReport',
-    src: null,
-    aspect: '4:3',
-    alt: {
-      sv: 'Den skriftliga besiktningsrapporten med drönarbilder av taket',
-      en: 'The written inspection report, with drone photographs of the roof',
-    },
-    brief:
-      'The deliverable of the free inspection, photographed as an object: the printed report or a tablet showing it, with roof images visible. This is what makes the free besiktning feel like something real rather than a sales visit.',
-    prompt:
-      'a printed inspection report resting on a kitchen table, open to a page of aerial roof photographs and a simple diagram, ' +
-      'a pen beside it, soft daylight from a window',
-  },
 
   heroRoofBefore: {
     id: 'heroRoofBefore',

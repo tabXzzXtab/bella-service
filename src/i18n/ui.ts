@@ -97,27 +97,41 @@ const sv = {
   'process.timeline.stepLabel': 'Steg',
   'process.giantWord': 'Rent.',
   'process.giantWord.note': 'Ett tak som sköts håller längre. Det är hela affärsidén.',
-  'process.welcome.title': 'Klart',
-  'process.welcome.note': 'Med garanti på utfört arbete.',
   'process.stats.title': 'Det här har vi gjort förut',
   'process.cta.title': 'Undrar du vad ditt tak behöver?',
   'process.cta.lead': 'Vi tittar på det kostnadsfritt och säger som det är.',
 
-  // --- Price estimator ----------------------------------------------------
-  'estimator.eyebrow': 'Prisuppskattning',
-  'estimator.title': 'Vad kostar det för ditt tak?',
-  'estimator.lead':
-    'Ange ytan så räknar vi fram ett ungefärligt pris direkt. Vet du inte ytan? Boka en kostnadsfri besiktning så mäter vi åt dig.',
-  'estimator.service': 'Tjänst',
-  'estimator.area': 'Takets yta',
-  'estimator.areaUnit': 'm²',
-  'estimator.facadeArea': 'Fasadens yta',
-  'estimator.panels': 'Antal paneler',
-  'estimator.panelsUnit': 'st',
-  'estimator.result': 'Ungefärligt pris',
-  'estimator.currency': 'kr',
-  'estimator.disclaimer':
-    'Detta är en uppskattning räknad på vårt från-pris, inte en offert. Exakt pris får du efter en kostnadsfri besiktning.',
+  // --- Price request ------------------------------------------------------
+  // No figures anywhere in here. The panel collects a service and a size and
+  // hands them to the contact form; the price comes from a person afterwards.
+  'priceRequest.eyebrow': 'Prisförfrågan',
+  'priceRequest.title': 'Vad behöver du hjälp med?',
+  'priceRequest.lead':
+    'Välj tjänst och ange ytan, så återkommer vi med ett pris. Vet du inte ytan? Boka en kostnadsfri besiktning så mäter vi åt dig.',
+  'priceRequest.service': 'Tjänst',
+  'priceRequest.area': 'Takets yta',
+  'priceRequest.areaUnit': 'm²',
+  'priceRequest.panels': 'Antal paneler',
+  'priceRequest.panelsUnit': 'st',
+  'priceRequest.submit': 'Begär pris',
+  'priceRequest.note':
+    'Vi lämnar pris först när vi sett vad som behöver göras. Förfrågan tar med tjänsten och ytan till formuläret — du fyller i hur vi når dig.',
+  'priceRequest.prefill': 'Hej! Jag vill gärna ha pris på {service}, ca {amount} {unit}.',
+
+  // --- Inline quote request -----------------------------------------------
+  // The e-mail step that every "Begär pris" button opens into.
+  'priceRequest.orForm': 'Eller fyll i hela formuläret',
+
+  'quote.emailLabel': 'Din e-postadress',
+  'quote.emailPlaceholder': 'namn@exempel.se',
+  'quote.send': 'Skicka',
+  'quote.sending': 'Skickar…',
+  'quote.cancel': 'Avbryt',
+  'quote.invalid': 'Kontrollera e-postadressen.',
+  // {phone} becomes a tel: link in the browser — see EmailCapture.astro.
+  'quote.error': 'Det gick inte att skicka just nu. Försök igen, eller ring oss på {phone}',
+  'quote.successTitle': 'Tack! Vi har din förfrågan.',
+  'quote.successBody': 'En bekräftelse är på väg till din inkorg. Vi hör av oss inom 48 timmar.',
 
   // --- Services page ------------------------------------------------------
   'services.title': 'Tjänster',
@@ -271,27 +285,38 @@ const en: Record<UIKey, string> = {
   'process.timeline.stepLabel': 'Step',
   'process.giantWord': 'Clean.',
   'process.giantWord.note': 'A roof that is looked after lasts longer. That is the whole business.',
-  'process.welcome.title': 'Finished',
-  'process.welcome.note': 'With a guarantee on the work.',
   'process.stats.title': 'What we have done before',
   'process.cta.title': 'Wondering what your roof needs?',
   'process.cta.lead': 'We will look at it free of charge and tell you straight.',
 
-  // --- Price estimator ----------------------------------------------------
-  'estimator.eyebrow': 'Price estimate',
-  'estimator.title': 'What would it cost for your roof?',
-  'estimator.lead':
-    'Enter the area and we will work out an approximate price straight away. Not sure of the area? Book a free inspection and we will measure it for you.',
-  'estimator.service': 'Service',
-  'estimator.area': 'Roof area',
-  'estimator.areaUnit': 'm²',
-  'estimator.facadeArea': 'Facade area',
-  'estimator.panels': 'Number of panels',
-  'estimator.panelsUnit': 'panels',
-  'estimator.result': 'Approximate price',
-  'estimator.currency': 'SEK',
-  'estimator.disclaimer':
-    'This is an estimate based on our starting rate, not a quote. You get an exact price after a free inspection.',
+  // --- Price request ------------------------------------------------------
+  'priceRequest.eyebrow': 'Price request',
+  'priceRequest.title': 'What do you need doing?',
+  'priceRequest.lead':
+    'Pick a service and give us the area, and we will come back with a price. Not sure of the area? Book a free inspection and we will measure it for you.',
+  'priceRequest.service': 'Service',
+  'priceRequest.area': 'Roof area',
+  'priceRequest.areaUnit': 'm²',
+  'priceRequest.panels': 'Number of panels',
+  'priceRequest.panelsUnit': 'panels',
+  'priceRequest.submit': 'Request a price',
+  'priceRequest.note':
+    'We give a price once we have seen what needs doing. Your request carries the service and the area over to the form — you just add how to reach you.',
+  'priceRequest.prefill': 'Hello! I would like a price for {service}, about {amount} {unit}.',
+
+  // --- Inline quote request -----------------------------------------------
+  'priceRequest.orForm': 'Or fill in the full form',
+
+  'quote.emailLabel': 'Your email address',
+  'quote.emailPlaceholder': 'name@example.com',
+  'quote.send': 'Send',
+  'quote.sending': 'Sending…',
+  'quote.cancel': 'Cancel',
+  'quote.invalid': 'Check the email address.',
+  'quote.error': 'That did not send just now. Try again, or call us on {phone}',
+  'quote.successTitle': 'Thank you — we have your request.',
+  'quote.successBody':
+    'A confirmation is on its way to your inbox. We will be in touch within 48 hours.',
 
   // --- Services page ------------------------------------------------------
   'services.title': 'Services',

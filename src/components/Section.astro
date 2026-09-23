@@ -22,7 +22,12 @@ interface Props {
   align?: 'left' | 'center';
   tight?: boolean;
   class?: string;
-  /** Skip the scroll reveal — used where content is already in view. */
+  /**
+   * The section is already in view on arrival, so it takes the entrance
+   * animation instead of the scroll reveal. A scroll reveal on something
+   * above the fold either fires instantly — which is a flicker, not a
+   * reveal — or never fires at all.
+   */
   noReveal?: boolean;
 }
 
@@ -50,7 +55,7 @@ const sectionClasses = [
 
 const headClasses = [
   'section-head',
-  !noReveal && 'reveal',
+  noReveal ? 'enter' : 'reveal',
   align === 'center' && 'section-head--center',
 ]
   .filter(Boolean)

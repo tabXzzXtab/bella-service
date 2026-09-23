@@ -1,0 +1,234 @@
+---
+import EmailCapture from './EmailCapture.astro';
+import { quotableServices } from '../data/services';
+import { path, pick, useTranslations } from '../i18n/utils';
+import type { Locale } from '../i18n/config';
+
+/**
+ * Price-request panel.
+ *
+ * This replaced an area-based estimator that multiplied a published per-m²
+ * rate and printed a figure. The site no longer publishes rates at all, so
+ * there is nothing left to multiply — and the panel's job changed with it:
+ * collect the two things that make an enquiry answerable, which service and
+ * how big, and carry them into the contact form so the visitor does not type
+ * them twice.
+ *
+ * ⚠ Nothing in here may render a number with a currency beside it. A "just a
+ * rough figure" addition is the estimator coming back, and the client has
+ * asked for no published prices anywhere on the site.
+ *
+ * Without JavaScript the button still goes to the contact page — unprefilled,
+ * which is a thinner experience but not a broken one. The fields above it are
+ * then inert, so they are labelled as a shortcut, not as the form itself.
+ *
+ * The inspection is not in the list: it is not measured in anything, and it is
+ * already the CTA at the foot of every page.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const options = quotableServices.map((service) => ({
+  id: service.id,
+  label: pick(service.title, locale),
+  measure: service.measure,
+}));
+
+const labels = { sqm: t('priceRequest.area'), panel: t('priceRequest.panels') };
+const units = { sqm: t('priceRequest.areaUnit'), panel: t('priceRequest.panelsUnit') };
+const contactPath = path('contact', locale);
+---
+
+{
+  /* `data-request-context` is the whole contract with <EmailCapture>: it
+    collects every `data-request-field` under here and posts them with the
+    address. This panel never has to know the capture exists. */
+}
+<div class="pr panel panel--outlined" data-price-request data-request-context>
+  <div class="pr-fields">
+    <div class="field">
+      <label for="pr-service">{t('priceRequest.service')}</label>
+      <select id="pr-service" data-pr-service data-request-field="tjanst">
+        {options.map((option) => <option value={option.id}>{option.label}</option>)}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="pr-amount" data-pr-label>{labels.sqm}</label>
+      <div class="field-unit-wrap">
+        <input
+          id="pr-amount"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="2000"
+          step="1"
+          value="120"
+          data-pr-amount
+          data-request-field="yta"
+        />
+        <span class="field-unit" data-pr-unit data-request-field="enhet">{units.sqm}</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="pr-note">{t('priceRequest.note')}</p>
+
+  <div class="pr-cta">
+    <EmailCapture
+      locale={locale}
+      kind="detailed"
+      id="pr"
+      label={t('priceRequest.submit')}
+      variant="accent"
+      size="lg"
+      fallbackHref={contactPath}
+    />
+
+    {
+      /* The long way round, still one click away. The capture asks for an
+        address; someone who would rather write a paragraph goes here, and
+        the link carries the two answers with it. */
+    }
+    <a href={contactPath} class="pr-alt" data-pr-link>{t('priceRequest.orForm')}</a>
+  </div>
+</div>
+
+<script is:inline define:vars={{ options, labels, units, contactPath }}>
+  (function () {
+    const root = document.querySelector('[data-price-request]');
+    if (!root) return;
+
+    const serviceSelect = root.querySelector('[data-pr-service]');
+    const amountInput = root.querySelector('[data-pr-amount]');
+    const amountLabel = root.querySelector('[data-pr-label]');
+    const unitLabel = root.querySelector('[data-pr-unit]');
+    const cta = root.querySelector('[data-pr-link]');
+
+    function update() {
+      const option = options.find((o) => o.id === serviceSelect.value) ?? options[0];
+
+      // Solar panels are counted, everything else is measured, so the label
+      // and the suffix both have to follow the chosen service.
+      amountLabel.textContent = labels[option.measure];
+      unitLabel.textContent = units[option.measure];
+
+      if (!cta) return;
+
+      // The choice travels as query parameters rather than in storage, so the
+      // link is shareable and works with a middle-click into a new tab.
+      const params = new URLSearchParams({ tjanst: option.id });
+      const quantity = Number(amountInput.value);
+      if (Number.isFinite(quantity) && quantity > 0) {
+        params.set('yta', String(Math.round(quantity)));
+      }
+      cta.href = contactPath + '?' + params.toString();
+    }
+
+    serviceSelect.addEventListener('change', update);
+    amountInput.addEventListener('input', update);
+    update();
+  })();
+</script>
+
+<style>
+  .pr {
+    display: grid;
+    gap: 1.75rem;
+    align-content: start;
+  }
+
+  .pr-fields {
+    display: grid;
+    gap: 1.1rem;
+  }
+
+  @media (width >= 34rem) {
+    .pr-fields {
+      grid-template-columns: 1.4fr 1fr;
+    }
+  }
+
+  .field {
+    display: grid;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .field label {
+    font-size: 0.875rem;
+    font-weight: 450;
+    color: var(--ink-soft);
+  }
+
+  .field select,
+  .field input {
+    width: 100%;
+    padding: 0.8rem 0.95rem;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--ink);
+    background-color: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--dur-fast) var(--ease);
+  }
+
+  .field select:hover,
+  .field input:hover {
+    border-color: var(--ink-faint);
+  }
+
+  .field-unit-wrap {
+    position: relative;
+  }
+
+  .field-unit-wrap input {
+    padding-inline-end: 3.5rem;
+  }
+
+  .field-unit {
+    position: absolute;
+    top: 50%;
+    right: 0.95rem;
+    translate: 0 -50%;
+    font-size: 0.875rem;
+    color: var(--ink-faint);
+    pointer-events: none;
+  }
+
+  /* Sits above the button, where the figure used to be. The band is quieter
+     now by design — there is no number to look at, so the panel should not
+     pretend there is. */
+  .pr-note {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--ink-faint);
+  }
+
+  .pr-cta {
+    display: grid;
+    gap: 0.9rem;
+    justify-items: start;
+    min-width: 0;
+  }
+
+  .pr-alt {
+    font-size: 0.875rem;
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line-strong);
+    padding-bottom: 2px;
+    transition: border-color var(--dur-fast) var(--ease);
+  }
+
+  .pr-alt:hover {
+    border-bottom-color: var(--accent);
+  }
+</style>

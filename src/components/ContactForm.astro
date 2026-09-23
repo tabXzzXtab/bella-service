@@ -1,6 +1,7 @@
 ---
 import Button from './Button.astro';
 import { services } from '../data/services';
+import { contactWebhook, RESPONSE_HOURS } from '../data/webhooks';
 import { site } from '../data/site';
 import { pick, useTranslations } from '../i18n/utils';
 import { ui } from '../i18n/ui';
@@ -39,6 +40,26 @@ const messages = {
 const labels = { submit: t('contact.form.submit'), sending: t('contact.form.sending') };
 
 /**
+ * What the start page's price-request panel hands over.
+ *
+ * That panel sends `?tjanst=<id>&yta=<n>`, and the select below is keyed by
+ * the translated service title rather than by id, so the browser needs this
+ * map to turn one into the other. The unit follows the service because solar
+ * panels are counted and everything else is measured.
+ */
+const requestLookup = Object.fromEntries(
+  services.map((service) => [
+    service.id,
+    {
+      title: pick(service.title, locale),
+      unit: service.measure === 'panel' ? t('priceRequest.panelsUnit') : t('priceRequest.areaUnit'),
+    },
+  ]),
+);
+
+const prefillTemplate = t('priceRequest.prefill');
+
+/**
  * Optional n8n (or any) webhook the form posts to directly from the browser.
  *
  * Set PUBLIC_CONTACT_WEBHOOK and the form sends JSON straight there instead of
@@ -56,7 +77,7 @@ const labels = { submit: t('contact.form.submit'), sending: t('contact.form.send
  *   - The receiving endpoint must send CORS headers allowing this origin, or
  *     the browser will block the request before n8n ever sees it.
  */
-const webhookUrl = import.meta.env.PUBLIC_CONTACT_WEBHOOK ?? '';
+const webhookUrl = contactWebhook;
 ---
 
 <form
@@ -180,7 +201,7 @@ const webhookUrl = import.meta.env.PUBLIC_CONTACT_WEBHOOK ?? '';
   </noscript>
 </form>
 
-<script is:inline define:vars={{ messages, labels, webhookUrl }}>
+<script is:inline define:vars={{ messages, labels, webhookUrl, requestLookup, prefillTemplate }}>
   (function () {
     const form = document.querySelector('[data-contact-form]');
     if (!form) return;
@@ -192,6 +213,39 @@ const webhookUrl = import.meta.env.PUBLIC_CONTACT_WEBHOOK ?? '';
     // Stamped in the browser, not at build time: these pages are static, so a
     // build-time value would be hours old and wave every bot through.
     if (renderedAt) renderedAt.value = String(Date.now());
+
+    /**
+     * Carry over a price request made on the start page.
+     *
+     * The panel there collects a service and a size and links here with them
+     * attached. Filling the select and opening the message with an editable
+     * sentence means the enquiry arrives answerable, and the visitor is not
+     * asked the same two questions twice.
+     *
+     * An unknown or missing parameter is simply ignored — this is a
+     * convenience, and a hand-edited URL must not be able to break the form.
+     */
+    (function prefillFromPriceRequest() {
+      const params = new URLSearchParams(window.location.search);
+      const chosen = requestLookup[params.get('tjanst') || ''];
+      if (!chosen) return;
+
+      const subject = form.querySelector('#subject');
+      if (subject) subject.value = chosen.title;
+
+      // Never overwrite something the visitor has already typed — a restored
+      // form on a back-navigation still holds their own words.
+      const message = form.querySelector('#message');
+      if (!message || message.value.trim().length > 0) return;
+
+      const amount = Number(params.get('yta'));
+      if (!Number.isFinite(amount) || amount <= 0) return;
+
+      message.value = prefillTemplate
+        .replace('{service}', chosen.title.toLowerCase())
+        .replace('{amount}', String(Math.round(amount)))
+        .replace('{unit}', chosen.unit);
+    })();
 
     function clearErrors() {
       form.querySelectorAll('[data-error-for]').forEach((n) => (n.textContent = ''));
@@ -244,10 +298,23 @@ const webhookUrl = import.meta.env.PUBLIC_CONTACT_WEBHOOK ?? '';
           // Static-host path: straight to the webhook as JSON, which is the
           // shape n8n's Webhook node expects. The honeypot field travels with
           // it so the workflow can drop obvious bots itself.
+          // text/plain rather than application/json keeps this a CORS
+          // "simple" request, so the browser sends no preflight OPTIONS for
+          // the webhook to answer. n8n parses the body as JSON either way.
+          //
+          // `kind` lets one workflow route all three of the site's forms, and
+          // the two timestamps are what the confirmation e-mail counts from.
+          const now = new Date();
           response = await fetch(webhookUrl, {
             method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(Object.fromEntries(data.entries())),
+            headers: { 'content-type': 'text/plain;charset=UTF-8' },
+            body: JSON.stringify({
+              ...Object.fromEntries(data.entries()),
+              kind: 'kontakt',
+              page: window.location.href,
+              submittedAt: now.toISOString(),
+              responseHours: RESPONSE_HOURS,
+            }),
           });
           // A webhook returns whatever the workflow returns — usually not our
           // {ok:true} envelope — so treat any 2xx as delivered.

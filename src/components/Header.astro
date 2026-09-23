@@ -35,11 +35,15 @@ const current = routeKeyFromPath(Astro.url.pathname);
 
 <header class="hdr" data-header>
   <div class="container-page hdr-inner">
-    <a href={path('home', locale)} class="hdr-brand" aria-label={t('nav.home')}>
+    <a href={path('home', locale)} class="hdr-brand enter" aria-label={t('nav.home')}>
       <Logo />
     </a>
 
-    <nav class="hdr-nav" aria-label={t('nav.menu')}>
+    <nav
+      class="hdr-nav enter"
+      style="--enter-delay:calc(var(--enter-stagger) * 1)"
+      aria-label={t('nav.menu')}
+    >
       {
         NAV_ORDER.map((key) => (
           <a href={path(key, locale)} aria-current={current === key ? 'page' : undefined}>
@@ -49,7 +53,7 @@ const current = routeKeyFromPath(Astro.url.pathname);
       }
     </nav>
 
-    <div class="hdr-actions">
+    <div class="hdr-actions enter" style="--enter-delay:calc(var(--enter-stagger) * 2)">
       <LanguageSwitcher locale={locale} />
       <Button href={path('contact', locale)} variant="primary" size="md">
         {t('common.bookInspection')}
@@ -58,7 +62,8 @@ const current = routeKeyFromPath(Astro.url.pathname);
 
     <button
       type="button"
-      class="hdr-toggle"
+      class="hdr-toggle enter"
+      style="--enter-delay:calc(var(--enter-stagger) * 2)"
       data-menu-toggle
       aria-expanded="false"
       aria-controls="site-menu"

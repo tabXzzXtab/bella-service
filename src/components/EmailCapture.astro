@@ -1,0 +1,431 @@
+---
+import Button from './Button.astro';
+import { site } from '../data/site';
+import { requestWebhooks, RESPONSE_HOURS, type RequestKind } from '../data/webhooks';
+import { useTranslations } from '../i18n/utils';
+import type { Locale } from '../i18n/config';
+
+/**
+ * A call to action that opens into an e-mail field in place.
+ *
+ * The button does not navigate. Pressing it slides the label out and the field
+ * in on the same line, so the visitor never leaves the section they were
+ * reading — the whole point is that asking for a price costs one field.
+ *
+ * Two kinds, and they post to different automations:
+ *
+ *  - `simple`   just the address. The start page hero.
+ *  - `detailed` the address plus whatever the surrounding panel has collected.
+ *
+ * How it picks up those details: it walks up to the nearest
+ * `[data-request-context]` and reads every `[data-request-field]` inside it.
+ * That keeps this component ignorant of the price panel's markup — a panel
+ * opts in by naming its fields, and this one never has to know what a service
+ * or a square metre is.
+ *
+ * Without JavaScript the button does nothing at all, which is why it is only
+ * ever rendered beside a real link to the contact page. The form there is the
+ * path that always works.
+ */
+interface Props {
+  locale: Locale;
+  /** Text on the closed button. */
+  label: string;
+  kind: RequestKind;
+  variant?: 'accent' | 'primary' | 'onDark';
+  size?: 'md' | 'lg';
+  /** Unique per instance — two captures can share a page. */
+  id: string;
+  /**
+   * Where the button goes when there is no JavaScript. Rendered inside
+   * <noscript>, and the interactive half is hidden in the same case, so the
+   * call to action is never a button that does nothing.
+   */
+  fallbackHref?: string;
+  class?: string;
+}
+
+const {
+  locale,
+  label,
+  kind,
+  variant = 'accent',
+  size = 'lg',
+  id,
+  fallbackHref,
+  class: className = '',
+} = Astro.props;
+
+const t = useTranslations(locale);
+---
+
+<div
+  class:list={['ec', variant === 'onDark' && 'ec--onDark', className]}
+  data-email-capture
+  data-state="idle"
+  data-kind={kind}
+  data-endpoint={requestWebhooks[kind]}
+  data-locale={locale}
+  data-hours={String(RESPONSE_HOURS)}
+  data-label-send={t('quote.send')}
+  data-label-sending={t('quote.sending')}
+  data-msg-invalid={t('quote.invalid')}
+  data-msg-error={t('quote.error')}
+  data-phone-display={site.phone.display}
+  data-phone-href={site.phone.href}
+  data-msg-success-title={t('quote.successTitle')}
+  data-msg-success-body={t('quote.successBody')}
+>
+  <div class="ec-lane">
+    <div class="ec-slot ec-slot--trigger">
+      <Button type="button" variant={variant} size={size} data-ec-open>{label}</Button>
+    </div>
+
+    <div class="ec-slot ec-slot--form">
+      <form class="ec-form" data-ec-form novalidate>
+        <input
+          id={`${id}-email`}
+          class="ec-input"
+          type="email"
+          name="email"
+          inputmode="email"
+          autocomplete="email"
+          spellcheck="false"
+          placeholder={t('quote.emailPlaceholder')}
+          aria-label={t('quote.emailLabel')}
+          required
+          data-ec-email
+        />
+        <Button type="submit" variant={variant} size={size} data-ec-submit>
+          {t('quote.send')}
+        </Button>
+      </form>
+    </div>
+  </div>
+
+  <p class="ec-status" data-ec-status role="status" aria-live="polite"></p>
+
+  {
+    fallbackHref && (
+      <noscript>
+        <Button href={fallbackHref} variant={variant} size={size}>
+          {label}
+        </Button>
+      </noscript>
+    )
+  }
+</div>
+
+<script>
+  /**
+   * Inline quote capture.
+   *
+   * One listener set per instance, and there can be more than one instance on
+   * a page — this is a bundled component script, so it is delivered once no
+   * matter how many times the component renders.
+   *
+   * Everything it needs is on the element as data attributes: the endpoint,
+   * the locale and every string. Nothing is duplicated into the bundle, and
+   * the Swedish and English pages ship the same JavaScript.
+   */
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
+
+  /** Read a motion token so a JS delay cannot drift from the CSS it waits on. */
+  function motionMs(name: string, fallback: number): number {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const value = Number.parseFloat(raw);
+    if (!Number.isFinite(value)) return fallback;
+    return raw.endsWith('ms') ? value : value * 1000;
+  }
+
+  /**
+   * Whatever the surrounding panel has already collected.
+   *
+   * The contract is one attribute: anything carrying `data-request-field`
+   * inside the nearest `[data-request-context]` is sent under that name. A
+   * <select> also sends its visible label, because an id like `taktvatt` is
+   * not what anyone wants to read in an e-mail.
+   */
+  function collectDetails(root: HTMLElement): Record<string, string> {
+    const details: Record<string, string> = {};
+    const context = root.closest('[data-request-context]');
+    if (!context) return details;
+
+    context.querySelectorAll<HTMLElement>('[data-request-field]').forEach((field) => {
+      const key = field.dataset.requestField;
+      if (!key) return;
+
+      if (field instanceof HTMLSelectElement) {
+        details[key] = field.value;
+        const option = field.selectedOptions[0];
+        if (option) details[`${key}Label`] = (option.textContent ?? '').trim();
+        return;
+      }
+
+      details[key] =
+        field instanceof HTMLInputElement ? field.value : (field.textContent ?? '').trim();
+    });
+
+    return details;
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-email-capture]').forEach((root) => {
+    const openButton = root.querySelector<HTMLButtonElement>('[data-ec-open]');
+    const form = root.querySelector<HTMLFormElement>('[data-ec-form]');
+    const email = root.querySelector<HTMLInputElement>('[data-ec-email]');
+    const submit = root.querySelector<HTMLButtonElement>('[data-ec-submit]');
+    const status = root.querySelector<HTMLElement>('[data-ec-status]');
+
+    if (!openButton || !form || !email || !submit || !status) return;
+
+    const endpoint = root.dataset.endpoint ?? '';
+    const sendLabel = root.dataset.labelSend ?? '';
+
+    const phoneDisplay = root.dataset.phoneDisplay ?? '';
+    const phoneHref = root.dataset.phoneHref ?? '';
+
+    /**
+     * Writes the status line, turning `{phone}` into a real tel: link.
+     *
+     * Built as nodes rather than assigned as innerHTML: these strings come
+     * from the dictionary, but a status line that accepts markup is a habit
+     * that eventually meets a string somebody else controls.
+     */
+    const say = (text: string, title?: string) => {
+      status.textContent = '';
+
+      if (title) {
+        const heading = document.createElement('strong');
+        heading.textContent = title;
+        status.append(heading);
+      }
+
+      const parts = text.split('{phone}');
+      parts.forEach((part, index) => {
+        if (part) status.append(document.createTextNode(part));
+        if (index === parts.length - 1 || !phoneHref) return;
+
+        const call = document.createElement('a');
+        call.href = `tel:${phoneHref}`;
+        call.textContent = phoneDisplay;
+        status.append(call);
+      });
+    };
+
+    const setTone = (tone: 'error' | null) => {
+      if (tone) root.dataset.tone = tone;
+      else delete root.dataset.tone;
+    };
+
+    openButton.addEventListener('click', () => {
+      root.dataset.state = 'open';
+      say('');
+      setTone(null);
+      // After the slide, not during it: focusing a field that is still zero
+      // pixels wide makes the browser scroll to a point that is about to move.
+      window.setTimeout(() => email.focus(), motionMs('--dur', 260));
+    });
+
+    root.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || root.dataset.state !== 'open') return;
+      root.dataset.state = 'idle';
+      say('');
+      setTone(null);
+      openButton.focus();
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const address = email.value.trim();
+      if (!EMAIL_PATTERN.test(address)) {
+        setTone('error');
+        say(root.dataset.msgInvalid ?? '');
+        email.focus();
+        return;
+      }
+
+      root.dataset.state = 'sending';
+      setTone(null);
+      submit.disabled = true;
+      submit.textContent = root.dataset.labelSending ?? sendLabel;
+
+      const hours = Number(root.dataset.hours) || 48;
+      const now = new Date();
+
+      const payload = {
+        kind: root.dataset.kind,
+        email: address,
+        locale: root.dataset.locale,
+        page: window.location.href,
+        submittedAt: now.toISOString(),
+        responseHours: hours,
+        // A convenience only. The promise is counted from the moment the
+        // confirmation is SENT, so the workflow should recompute this itself
+        // rather than trust a clock it does not control.
+        respondBy: new Date(now.getTime() + hours * 60 * 60 * 1000).toISOString(),
+        details: collectDetails(root),
+      };
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          // text/plain keeps this a CORS "simple" request. application/json
+          // would make the browser send a preflight OPTIONS first, which the
+          // webhook would then also have to answer.
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) throw new Error(String(response.status));
+
+        root.dataset.state = 'sent';
+        say(root.dataset.msgSuccessBody ?? '', root.dataset.msgSuccessTitle ?? '');
+      } catch {
+        // Back to the open field rather than to the button: their address is
+        // still typed, and a retry should not cost them the typing.
+        root.dataset.state = 'open';
+        setTone('error');
+        say(root.dataset.msgError ?? '');
+        submit.disabled = false;
+        submit.textContent = sendLabel;
+      }
+    });
+  });
+</script>
+
+<style>
+  .ec {
+    display: grid;
+    gap: 0.6rem;
+    justify-items: start;
+    min-width: 0;
+  }
+
+  .ec-lane {
+    display: flex;
+    align-items: center;
+    max-width: 100%;
+  }
+
+  /* `.js` is set by an inline script in <head> before first paint. Without it
+     the lane never appears and the <noscript> link is the whole control. */
+  :global(html:not(.js)) .ec-lane {
+    display: none;
+  }
+
+  /* The slide itself. Both halves sit on one line and trade places by
+     collapsing their own width, which keeps the button and the field on the
+     same baseline instead of one dropping below the other. */
+  .ec-slot {
+    overflow: hidden;
+    transition:
+      max-inline-size var(--dur) var(--ease),
+      opacity var(--dur-fast) var(--ease);
+  }
+
+  .ec-slot--trigger {
+    max-inline-size: 24rem;
+    opacity: 1;
+  }
+
+  .ec-slot--form {
+    max-inline-size: 0;
+    opacity: 0;
+  }
+
+  .ec[data-state='open'] .ec-slot--trigger,
+  .ec[data-state='sending'] .ec-slot--trigger,
+  .ec[data-state='sent'] .ec-slot--trigger {
+    max-inline-size: 0;
+    opacity: 0;
+  }
+
+  .ec[data-state='open'] .ec-slot--form,
+  .ec[data-state='sending'] .ec-slot--form {
+    max-inline-size: 26rem;
+    opacity: 1;
+  }
+
+  .ec-form {
+    display: flex;
+    gap: 0.5rem;
+    /* Wide enough for a real address, capped so it cannot push a phone
+       layout sideways. */
+    inline-size: 26rem;
+    max-inline-size: 78vw;
+  }
+
+  .ec-input {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    padding: 0.8rem 0.95rem;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--ink);
+    background-color: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--dur-fast) var(--ease);
+  }
+
+  .ec-input:hover,
+  .ec-input:focus-visible {
+    border-color: var(--ink-faint);
+  }
+
+  .ec-status {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  .ec-status:empty {
+    display: none;
+  }
+
+  /* Underlined and tappable: a send that failed should put a call one tap
+     away, not a number to copy out by hand. */
+  .ec-status a {
+    color: inherit;
+    font-weight: 500;
+    text-decoration: underline;
+  }
+
+  .ec[data-tone='error'] .ec-status {
+    color: var(--accent-ink);
+  }
+
+  .ec-status strong {
+    display: block;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  /* On a dark band the field and the helper text have to invert too, or the
+     capture is the one element on the panel still dressed for daylight. */
+  .ec--onDark .ec-input {
+    color: var(--bg);
+    background-color: rgb(255 255 255 / 0.08);
+    border-color: rgb(255 255 255 / 0.3);
+  }
+
+  .ec--onDark .ec-input::placeholder {
+    color: rgb(251 250 248 / 0.55);
+  }
+
+  .ec--onDark .ec-status {
+    color: rgb(251 250 248 / 0.75);
+  }
+
+  .ec--onDark .ec-status strong,
+  .ec--onDark .ec-status a {
+    color: var(--bg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ec-slot {
+      transition: none;
+    }
+  }
+</style>

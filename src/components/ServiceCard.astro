@@ -1,17 +1,18 @@
 ---
-import { formatPrice, type Service } from '../data/services';
+import type { Service } from '../data/services';
 import { pick, useTranslations } from '../i18n/utils';
 import type { Locale } from '../i18n/config';
 
 /**
  * One service.
  *
- * No icon, no outline, no price badge. The card is a white panel with a
- * hairline rule between the description and what is included — the earlier
- * version boxed every element separately and read as a dashboard widget
- * rather than as something a person would want to buy.
+ * No icon, no outline, no price. The card is a white panel with a hairline
+ * rule between the description and what is included — the earlier version
+ * boxed every element separately and read as a dashboard widget rather than
+ * as something a person would want to buy.
  *
- * The price keeps its "Från" qualifier in every rendering; see formatPrice.
+ * ⚠ No figure goes on this card. The site publishes no rates at all; the
+ * price-request panel on the start page is how a visitor asks for one.
  */
 interface Props {
   service: Service;
@@ -23,8 +24,6 @@ interface Props {
 const { service, locale, level = 3 } = Astro.props;
 
 const t = useTranslations(locale);
-const price = formatPrice(service.price, locale);
-const isFree = service.price.kind === 'free';
 ---
 
 <article class="svc panel" id={service.id}>
@@ -35,8 +34,6 @@ const isFree = service.price.kind === 'free';
       <h3 class="svc-title">{pick(service.title, locale)}</h3>
     )
   }
-
-  <p class:list={['svc-price', isFree && 'svc-price--free']}>{price}</p>
 
   <p class="svc-summary">{pick(service.summary, locale)}</p>
 
@@ -56,14 +53,7 @@ const isFree = service.price.kind === 'free';
   }
 
   .svc-title {
-    margin-bottom: 0.4rem;
-  }
-
-  .svc-price {
-    font-size: 0.9375rem;
-    font-weight: 500;
-    color: var(--accent-ink);
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
   }
 
   .svc-summary {

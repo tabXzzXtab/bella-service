@@ -34,6 +34,15 @@ interface Props {
    * the source files, so something always goes.
    */
   focus?: 'center' | 'top';
+  /**
+   * Whether the band is height-capped on a wide screen.
+   *
+   * True suits a frame close to 3:2 or squarer, which would otherwise run past
+   * the fold. Pass false for something already cropped panoramic: capping the
+   * height of a 4:1 strip does not shorten it, it magnifies it and throws the
+   * sides away.
+   */
+  capHeight?: boolean;
   class?: string;
 }
 
@@ -43,6 +52,7 @@ const {
   overlayTitle,
   overlayNote,
   focus = 'center',
+  capHeight = true,
   class: className = '',
 } = Astro.props;
 
@@ -51,7 +61,10 @@ const focusValue = focus === 'top' ? '50% 15%' : '50% 50%';
 ---
 
 <figure class:list={['fb', className]}>
-  <div class="fb-frame" style={`--media-focus:${focusValue}`}>
+  <div
+    class:list={['fb-frame', hasOverlay && 'fb-frame--scrim', capHeight && 'fb-frame--capped']}
+    style={`--media-focus:${focusValue}`}
+  >
     <Placeholder id={media} locale={locale} radius="none" />
 
     {
@@ -102,7 +115,7 @@ const focusValue = focus === 'top' ? '50% 15%' : '50% 50%';
        screen. `svh` rather than `vh` because on mobile browsers `vh` measures
        the viewport with the toolbars retracted, which is taller than what is
        actually on screen. */
-    .fb-frame :global(.media) {
+    .fb-frame--capped :global(.media) {
       aspect-ratio: auto;
       block-size: min(76svh, 42rem);
     }
@@ -127,8 +140,11 @@ const focusValue = focus === 'top' ? '50% 15%' : '50% 50%';
        turns out to be — without it this depends on getting lucky, and the
        first photograph to land here put white text over a white van. Weighted
        towards the bottom edge so it darkens the line the text sits on without
-       flattening the picture above it. */
-    .fb-frame::after {
+       flattening the picture above it.
+
+       Only drawn when there is actually text to protect. A band with no
+       overlay gets the photograph undimmed. */
+    .fb-frame--scrim::after {
       content: '';
       position: absolute;
       inset-inline: 0;

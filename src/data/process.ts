@@ -65,7 +65,10 @@ export const processItems: readonly ProcessItem[] = [
     kind: 'step',
     id: 'besiktning',
     side: 'left',
-    media: 'droneInspection',
+    // No image: nothing the client has supplied shows a drone or a survey in
+    // progress, and this step is not going to borrow an unrelated photograph
+    // to fill the gap. Shoot the drone in the air, add a `droneInspection`
+    // entry back to src/data/media.ts, then put `media` back on this line.
     title: { sv: 'Kostnadsfri besiktning', en: 'Free inspection' },
     body: {
       sv: [
@@ -82,7 +85,9 @@ export const processItems: readonly ProcessItem[] = [
     kind: 'step',
     id: 'rapport',
     side: 'right',
-    media: 'processReport',
+    // No image, same reason: there is no photograph of the written report.
+    // It is the most persuasive object in the whole process — photograph it
+    // open on a table and this step gets its picture back.
     title: { sv: 'Rapport och fast pris', en: 'Report and fixed price' },
     body: {
       sv: [

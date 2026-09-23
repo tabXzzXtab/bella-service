@@ -36,8 +36,15 @@ const alt = pick(slot.alt, locale);
 
 /* `media` is `as const`, so each slot narrows to its own literal shape and the
    ones with no clip have no `video` property at all to read. `in` narrows the
-   union instead of widening the manifest. */
-const videoSrc = 'video' in slot ? slot.video : undefined;
+   union instead of widening the manifest.
+
+   No slot carries a clip right now — the only footage the client supplied
+   showed work at height with no fall protection and has been deleted — so
+   this is undefined for every slot today. The machinery stays: when safe
+   footage lands, adding `video` to its slot is the whole change, and the
+   typeof guard is what keeps that compiling in the meantime. */
+const videoSrc: string | undefined =
+  'video' in slot && typeof slot.video === 'string' ? slot.video : undefined;
 
 const radiusValue =
   radius === 'none' ? '0' : radius === 'lg' ? 'var(--radius-lg)' : 'var(--radius)';

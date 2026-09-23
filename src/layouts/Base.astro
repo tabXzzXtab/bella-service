@@ -84,6 +84,15 @@ const t = useTranslations(locale);
     }
     <a href="#main" class="sr-only-focusable">{t('nav.skipToContent')}</a>
 
+    {
+      /*
+      Both of these are decoration with no content in them, so they are hidden
+      from assistive technology outright. The progress hairline duplicates the
+      scrollbar; the curtain is a colour that covers a navigation.
+    */
+    }
+    <div class="scroll-progress" aria-hidden="true"><span></span></div>
+
     <Header locale={locale} />
 
     <main id="main" class={mainClass}>
@@ -93,6 +102,10 @@ const t = useTranslations(locale);
     <Footer locale={locale} />
 
     <MobileActionBar locale={locale} />
+
+    <div class="curtain" data-curtain aria-hidden="true">
+      <span class="curtain-line"></span>
+    </div>
 
     <script>
       /**
@@ -117,6 +130,95 @@ const t = useTranslations(locale);
         );
 
         targets.forEach((element) => observer.observe(element));
+      }
+    </script>
+
+    <script>
+      /**
+       * Arrival, scroll progress, and the curtain over a page change.
+       *
+       * All three are decoration over content that is already in the HTML, so
+       * every one of them is allowed to simply not happen.
+       */
+      const root = document.documentElement;
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      /* The entrance animation is pure CSS — see `.enter` in global.css. It
+       * used to be released by a class added here, which made the first
+       * screen depend on this bundle loading. It no longer does. */
+
+      /* --- Scroll progress -------------------------------------------------
+       * Writes one custom property; the bar itself is scaled on the
+       * compositor. Reads are coalesced into a frame so a fast wheel cannot
+       * force a layout on every event. */
+      const progress = document.querySelector<HTMLElement>('.scroll-progress');
+
+      if (progress) {
+        let ticking = false;
+
+        const sync = () => {
+          ticking = false;
+          const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+          const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+          progress.style.setProperty('--scroll-progress', String(Math.min(1, Math.max(0, ratio))));
+        };
+
+        const request = () => {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(sync);
+        };
+
+        window.addEventListener('scroll', request, { passive: true });
+        window.addEventListener('resize', request, { passive: true });
+        sync();
+      }
+
+      /* --- The curtain -----------------------------------------------------
+       * This site is a multi-page app: a link click hands the browser a new
+       * document, and there is a gap before it paints. The curtain covers that
+       * gap. It is never dismissed, because the document it lives in is
+       * destroyed the moment the next one arrives.
+       *
+       * Which means the one thing that can go wrong is a navigation that does
+       * NOT happen — a cancelled load, or a back-button restore from the
+       * bfcache, either of which would leave a live page under a navy sheet.
+       * Hence both the timeout and the pageshow handler below.
+       */
+      const curtain = document.querySelector('[data-curtain]');
+
+      const clearCurtain = () => root.classList.remove('is-leaving');
+
+      // Restoring from the bfcache re-shows this exact document, curtain and
+      // all, so it has to be lifted on the way back in.
+      window.addEventListener('pageshow', clearCurtain);
+      window.addEventListener('popstate', clearCurtain);
+
+      if (curtain && !reduceMotion.matches) {
+        document.addEventListener('click', (event) => {
+          if (event.defaultPrevented || event.button !== 0) return;
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+          const link = (event.target as Element | null)?.closest?.('a');
+          if (!(link instanceof HTMLAnchorElement)) return;
+
+          // Anything that is not this site opening in this tab is left alone:
+          // downloads, new tabs, tel: and mailto:, and opt-outs.
+          if (link.hasAttribute('download') || link.hasAttribute('data-no-curtain')) return;
+          if (link.target && link.target !== '_self') return;
+          if (link.origin !== window.location.origin) return;
+
+          // A jump inside the current page is not a navigation.
+          const samePage =
+            link.pathname === window.location.pathname && link.search === window.location.search;
+          if (samePage) return;
+
+          root.classList.add('is-leaving');
+
+          // If the load is cancelled or stalls, give the page back rather than
+          // leaving someone staring at a blank colour.
+          window.setTimeout(clearCurtain, 4000);
+        });
       }
     </script>
   </body>
