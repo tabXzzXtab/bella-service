@@ -1,16 +1,19 @@
 ---
 import Button from './Button.astro';
+import { services } from '../data/services';
 import { site } from '../data/site';
 import { requestWebhooks, RESPONSE_HOURS, type RequestKind } from '../data/webhooks';
-import { useTranslations } from '../i18n/utils';
+import { pick, useTranslations } from '../i18n/utils';
 import type { Locale } from '../i18n/config';
 
 /**
- * A call to action that opens into an e-mail field in place.
+ * A call to action that opens into a short form in place.
  *
- * The button does not navigate. Pressing it slides the label out and the field
- * in on the same line, so the visitor never leaves the section they were
- * reading — the whole point is that asking for a price costs one field.
+ * The button does not navigate. Pressing it collapses the label and unfolds
+ * the fields underneath it, so the visitor never leaves the section they were
+ * reading. Keep it to the fewest fields that make an enquiry answerable: a way
+ * to reach them, and — where the surrounding section has not already asked —
+ * what the job is.
  *
  * Two kinds, and they post to different automations:
  *
@@ -37,6 +40,18 @@ interface Props {
   /** Unique per instance — two captures can share a page. */
   id: string;
   /**
+   * Ask for a phone number as well as an address. On by default: for this
+   * trade most enquiries are settled in a two-minute call, and the client's
+   * brief marks the number required on the full form for the same reason.
+   */
+  withPhone?: boolean;
+  /**
+   * Ask which service they want. Only for a capture that stands on its own —
+   * inside the price panel the section has already asked, and a second select
+   * would be the same question twice.
+   */
+  withService?: boolean;
+  /**
    * Where the button goes when there is no JavaScript. Rendered inside
    * <noscript>, and the interactive half is hidden in the same case, so the
    * call to action is never a button that does nothing.
@@ -52,6 +67,8 @@ const {
   variant = 'accent',
   size = 'lg',
   id,
+  withPhone = true,
+  withService = false,
   fallbackHref,
   class: className = '',
 } = Astro.props;
@@ -62,6 +79,7 @@ const t = useTranslations(locale);
 <div
   class:list={['ec', variant === 'onDark' && 'ec--onDark', className]}
   data-email-capture
+  data-request-context={withService ? '' : undefined}
   data-state="idle"
   data-kind={kind}
   data-endpoint={requestWebhooks[kind]}
@@ -70,19 +88,40 @@ const t = useTranslations(locale);
   data-label-send={t('quote.send')}
   data-label-sending={t('quote.sending')}
   data-msg-invalid={t('quote.invalid')}
+  data-msg-invalid-phone={t('quote.invalidPhone')}
   data-msg-error={t('quote.error')}
   data-phone-display={site.phone.display}
   data-phone-href={site.phone.href}
   data-msg-success-title={t('quote.successTitle')}
   data-msg-success-body={t('quote.successBody')}
 >
-  <div class="ec-lane">
-    <div class="ec-slot ec-slot--trigger">
-      <Button type="button" variant={variant} size={size} data-ec-open>{label}</Button>
-    </div>
+  <div class="ec-trigger">
+    <Button type="button" variant={variant} size={size} data-ec-open>{label}</Button>
+  </div>
 
-    <div class="ec-slot ec-slot--form">
-      <form class="ec-form" data-ec-form novalidate>
+  {
+    /* Unfolds downward rather than sideways: three fields do not fit on one
+      line at 390px, and a form that has to wrap mid-animation reads as a
+      glitch rather than as an opening. */
+  }
+  <div class="ec-reveal">
+    <div class="ec-reveal-inner">
+      <form class:list={['ec-form', withPhone && 'ec-form--pair']} data-ec-form novalidate>
+        {
+          withService && (
+            <select
+              id={`${id}-service`}
+              class="ec-input"
+              aria-label={t('quote.serviceLabel')}
+              data-request-field="tjanst"
+            >
+              {services.map((service) => (
+                <option value={service.id}>{pick(service.title, locale)}</option>
+              ))}
+            </select>
+          )
+        }
+
         <input
           id={`${id}-email`}
           class="ec-input"
@@ -96,6 +135,24 @@ const t = useTranslations(locale);
           required
           data-ec-email
         />
+
+        {
+          withPhone && (
+            <input
+              id={`${id}-phone`}
+              class="ec-input"
+              type="tel"
+              name="phone"
+              inputmode="tel"
+              autocomplete="tel"
+              placeholder={t('quote.phonePlaceholder')}
+              aria-label={t('quote.phoneLabel')}
+              required
+              data-ec-phone
+            />
+          )
+        }
+
         <Button type="submit" variant={variant} size={size} data-ec-submit>
           {t('quote.send')}
         </Button>
@@ -129,6 +186,21 @@ const t = useTranslations(locale);
    * the Swedish and English pages ship the same JavaScript.
    */
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
+
+  /**
+   * Swedish numbers get written 0733-987 868, +46 733 98 78 68, 0733987868 …
+   * so rather than pattern-match a format, require enough digits to be
+   * dialable. Same rule as the full form in src/lib/contact.ts.
+   */
+  const MIN_PHONE_DIGITS = 6;
+
+  function countDigits(value: string): number {
+    let digits = 0;
+    for (const character of value) {
+      if (character >= '0' && character <= '9') digits += 1;
+    }
+    return digits;
+  }
 
   /** Read a motion token so a JS delay cannot drift from the CSS it waits on. */
   function motionMs(name: string, fallback: number): number {
@@ -173,6 +245,9 @@ const t = useTranslations(locale);
     const openButton = root.querySelector<HTMLButtonElement>('[data-ec-open]');
     const form = root.querySelector<HTMLFormElement>('[data-ec-form]');
     const email = root.querySelector<HTMLInputElement>('[data-ec-email]');
+    // Optional: a caller can ask for either, both or neither.
+    const phone = root.querySelector<HTMLInputElement>('[data-ec-phone]');
+    const service = root.querySelector<HTMLSelectElement>('[data-request-field="tjanst"]');
     const submit = root.querySelector<HTMLButtonElement>('[data-ec-submit]');
     const status = root.querySelector<HTMLElement>('[data-ec-status]');
 
@@ -221,9 +296,11 @@ const t = useTranslations(locale);
       root.dataset.state = 'open';
       say('');
       setTone(null);
-      // After the slide, not during it: focusing a field that is still zero
-      // pixels wide makes the browser scroll to a point that is about to move.
-      window.setTimeout(() => email.focus(), motionMs('--dur', 260));
+      // After the unfold, not during it: focusing a field inside a box that
+      // is still zero pixels tall makes the browser scroll to a point that is
+      // about to move. First field, whichever the caller asked for first.
+      const first = service ?? email;
+      window.setTimeout(() => first.focus(), motionMs('--dur', 260));
     });
 
     root.addEventListener('keydown', (event) => {
@@ -245,6 +322,14 @@ const t = useTranslations(locale);
         return;
       }
 
+      const number = phone ? phone.value.trim() : '';
+      if (phone && countDigits(number) < MIN_PHONE_DIGITS) {
+        setTone('error');
+        say(root.dataset.msgInvalidPhone ?? '');
+        phone.focus();
+        return;
+      }
+
       root.dataset.state = 'sending';
       setTone(null);
       submit.disabled = true;
@@ -256,6 +341,7 @@ const t = useTranslations(locale);
       const payload = {
         kind: root.dataset.kind,
         email: address,
+        phone: number,
         locale: root.dataset.locale,
         page: window.location.href,
         submittedAt: now.toISOString(),
@@ -302,58 +388,77 @@ const t = useTranslations(locale);
     min-width: 0;
   }
 
-  .ec-lane {
-    display: flex;
-    align-items: center;
-    max-width: 100%;
-  }
-
   /* `.js` is set by an inline script in <head> before first paint. Without it
-     the lane never appears and the <noscript> link is the whole control. */
-  :global(html:not(.js)) .ec-lane {
+     neither half appears and the <noscript> link is the whole control. */
+  :global(html:not(.js)) .ec-trigger,
+  :global(html:not(.js)) .ec-reveal {
     display: none;
   }
 
-  /* The slide itself. Both halves sit on one line and trade places by
-     collapsing their own width, which keeps the button and the field on the
-     same baseline instead of one dropping below the other. */
-  .ec-slot {
-    overflow: hidden;
+  /* Both halves collapse along the block axis rather than swapping on one
+     line: `0fr` to `1fr` is the one way to animate to a height nobody can
+     know in advance, and the form's height depends on how many fields the
+     caller asked for. */
+  .ec-trigger,
+  .ec-reveal {
+    display: grid;
+    max-width: 100%;
     transition:
-      max-inline-size var(--dur) var(--ease),
+      grid-template-rows var(--dur) var(--ease),
       opacity var(--dur-fast) var(--ease);
   }
 
-  .ec-slot--trigger {
-    max-inline-size: 24rem;
+  .ec-trigger > *,
+  .ec-reveal-inner {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .ec-trigger {
+    grid-template-rows: 1fr;
     opacity: 1;
   }
 
-  .ec-slot--form {
-    max-inline-size: 0;
+  .ec-reveal {
+    grid-template-rows: 0fr;
     opacity: 0;
   }
 
-  .ec[data-state='open'] .ec-slot--trigger,
-  .ec[data-state='sending'] .ec-slot--trigger,
-  .ec[data-state='sent'] .ec-slot--trigger {
-    max-inline-size: 0;
+  .ec[data-state='open'] .ec-trigger,
+  .ec[data-state='sending'] .ec-trigger,
+  .ec[data-state='sent'] .ec-trigger {
+    grid-template-rows: 0fr;
     opacity: 0;
   }
 
-  .ec[data-state='open'] .ec-slot--form,
-  .ec[data-state='sending'] .ec-slot--form {
-    max-inline-size: 26rem;
+  .ec[data-state='open'] .ec-reveal,
+  .ec[data-state='sending'] .ec-reveal {
+    grid-template-rows: 1fr;
     opacity: 1;
   }
 
   .ec-form {
-    display: flex;
+    display: grid;
     gap: 0.5rem;
     /* Wide enough for a real address, capped so it cannot push a phone
-       layout sideways. */
-    inline-size: 26rem;
-    max-inline-size: 78vw;
+       layout sideways. The top padding is the gap the collapsed trigger
+       leaves behind. */
+    padding-top: 0.15rem;
+    inline-size: 24rem;
+    max-inline-size: min(100%, 82vw);
+  }
+
+  /* Once there is room, the two contact fields share a line so the form does
+     not become a tall column on a desktop hero. */
+  @media (width >= 30rem) {
+    .ec-form--pair {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .ec-form--pair > :global(select),
+    .ec-form--pair > :global(button) {
+      grid-column: 1 / -1;
+    }
   }
 
   .ec-input {

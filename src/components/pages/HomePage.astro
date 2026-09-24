@@ -55,6 +55,7 @@ const t = useTranslations(locale);
           locale={locale}
           kind="simple"
           id="hero"
+          withService
           label={t('common.getQuote')}
           variant="accent"
           size="lg"
@@ -183,6 +184,9 @@ const t = useTranslations(locale);
   .hero-actions {
     display: flex;
     flex-wrap: wrap;
+    /* Top-aligned, not stretched: the quote button grows downward into a
+       form when it is opened, and a stretched sibling would grow with it. */
+    align-items: flex-start;
     gap: 0.75rem;
     margin-top: 0.75rem;
   }

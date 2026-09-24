@@ -123,6 +123,10 @@ const sv = {
   'priceRequest.orForm': 'Eller fyll i hela formuläret',
 
   'quote.emailLabel': 'Din e-postadress',
+  'quote.phoneLabel': 'Ditt telefonnummer',
+  'quote.phonePlaceholder': '070-123 45 67',
+  'quote.serviceLabel': 'Vad vill du ha hjälp med?',
+  'quote.invalidPhone': 'Kontrollera telefonnumret.',
   'quote.emailPlaceholder': 'namn@exempel.se',
   'quote.send': 'Skicka',
   'quote.sending': 'Skickar…',
@@ -308,6 +312,10 @@ const en: Record<UIKey, string> = {
   'priceRequest.orForm': 'Or fill in the full form',
 
   'quote.emailLabel': 'Your email address',
+  'quote.phoneLabel': 'Your phone number',
+  'quote.phonePlaceholder': '070-123 45 67',
+  'quote.serviceLabel': 'What do you need help with?',
+  'quote.invalidPhone': 'Check the phone number.',
   'quote.emailPlaceholder': 'name@example.com',
   'quote.send': 'Send',
   'quote.sending': 'Sending…',

@@ -7,6 +7,11 @@
     <!--
       Den interna kopian, till Kim@bellaserviceab.se.
 
+      Raden "Omfattning" skrivs av ett uttryck och försvinner helt när ytan
+      saknas, i stället för att visa ett tankstreck. Förfrågan från
+      startsidans knapp har ingen yta — där frågar vi bara efter tjänst,
+      e-post och telefon.
+
       Samma varumärke som kundmejlet men medvetet torrare: det här ska gå att
       läsa på en telefon i en bil, så uppgifterna står först och ingenting
       annat konkurrerar om utrymmet. Svarsadressen sätts till kundens adress i
@@ -142,6 +147,23 @@
                   </tr>
                   <tr>
                     <td style="padding: 10px 0; border-top: 1px solid #e7e4df; color: #8b929c">
+                      Telefon
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-top: 1px solid #e7e4df;
+                        color: #16191f;
+                        font-weight: 500;
+                      "
+                    >
+                      <a href="tel:{{ $json.phone }}" style="color: #16191f; text-decoration: none"
+                        >{{ $json.phone }}</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 0; border-top: 1px solid #e7e4df; color: #8b929c">
                       Tjänst
                     </td>
                     <td
@@ -155,6 +177,7 @@
                       {{ $json.details.tjanstLabel || '—' }}
                     </td>
                   </tr>
+                  {{ $json.details?.yta ? `
                   <tr>
                     <td style="padding: 10px 0; border-top: 1px solid #e7e4df; color: #8b929c">
                       Omfattning
@@ -167,16 +190,16 @@
                         font-weight: 500;
                       "
                     >
-                      {{ $json.details.yta ? $json.details.yta + ' ' + ($json.details.enhet || '') :
-                      '—' }}
+                      ${$json.details.yta} ${$json.details.enhet || ''}
                     </td>
                   </tr>
+                  ` : '' }}
                   <tr>
                     <td style="padding: 10px 0; border-top: 1px solid #e7e4df; color: #8b929c">
                       Typ
                     </td>
                     <td style="padding: 10px 0; border-top: 1px solid #e7e4df; color: #16191f">
-                      {{ $json.kind }}
+                      {{ $json.kind === 'detailed' ? 'Prisförfrågan med yta' : 'Prisförfrågan' }}
                     </td>
                   </tr>
                   <tr>
