@@ -125,13 +125,20 @@ form was submitted:
 {{ new Date(Date.now() + 48 * 60 * 60 * 1000).toLocaleString($json.locale === 'en' ? 'en-GB' : 'sv-SE', { timeZone: 'Europe/Stockholm', dateStyle: 'full', timeStyle: 'short' }) }}
 ```
 
-`detailsRowsHtml` — expression, **quote templates only**. The contact
+`detailsRowsHtml` — expression, **quote templates only**.
+
+⚠ This expression was rewritten once the start-page button began asking which
+service. Before that, a service always arrived together with an area, so one
+check covered both. Now the hero sends a service and no area, and the old
+version rendered `Omfattning: undefined` into the customer's confirmation. The
+version below guards each row separately and moves the bottom hairline onto
+whichever row ends up last. The contact
 templates have their own fixed table and do not use it. It emits the
 "Din förfrågan" rows for a detailed request and an empty string for a simple
 one, which is what lets one template serve both:
 
 ```
-{{ $json.details?.tjanstLabel ? `<tr><td style="padding:26px 32px 0;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;"><p style="margin:0 0 10px;font-size:13px;color:#8b929c;">Din förfrågan</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:15px;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;"><tr><td style="padding:10px 0;border-top:1px solid #e7e4df;color:#8b929c;width:38%;">Tjänst</td><td style="padding:10px 0;border-top:1px solid #e7e4df;color:#16191f;font-weight:500;">${$json.details.tjanstLabel}</td></tr><tr><td style="padding:10px 0;border-top:1px solid #e7e4df;border-bottom:1px solid #e7e4df;color:#8b929c;">Omfattning</td><td style="padding:10px 0;border-top:1px solid #e7e4df;border-bottom:1px solid #e7e4df;color:#16191f;font-weight:500;">${$json.details.yta} ${$json.details.enhet || ''}</td></tr></table></td></tr>` : '' }}
+{{ !$json.details?.tjanstLabel ? '' : `<tr><td style="padding:26px 32px 0;font-family:Inter,Helvetica,Arial,sans-serif;"><p style="margin:0 0 10px;font-size:13px;color:#8b929c;">Din förfrågan</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:15px;font-family:Inter,Helvetica,Arial,sans-serif;"><tr><td style="padding:10px 0;border-top:1px solid #e7e4df;${$json.details.yta ? '' : 'border-bottom:1px solid #e7e4df;'}color:#8b929c;width:38%;">Tjänst</td><td style="padding:10px 0;border-top:1px solid #e7e4df;${$json.details.yta ? '' : 'border-bottom:1px solid #e7e4df;'}color:#16191f;font-weight:500;">${$json.details.tjanstLabel}</td></tr>${$json.details.yta ? `<tr><td style="padding:10px 0;border-top:1px solid #e7e4df;border-bottom:1px solid #e7e4df;color:#8b929c;">Omfattning</td><td style="padding:10px 0;border-top:1px solid #e7e4df;border-bottom:1px solid #e7e4df;color:#16191f;font-weight:500;">${$json.details.yta} ${$json.details.enhet || ''}</td></tr>` : ''}</table></td></tr>` }}
 ```
 
 Also set the internal mail's **Reply-To** to `{{ $json.email }}`, so hitting
