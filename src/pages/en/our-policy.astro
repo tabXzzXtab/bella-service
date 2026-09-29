@@ -7,6 +7,6 @@ const locale = 'en' as const;
 const t = useTranslations(locale);
 ---
 
-<Base title={t('policy.title')} description={t('policy.description')}>
+<Base title={t('policy.title')} description={t('policy.description')} reversibleReveal>
   <PolicyPage locale={locale} />
 </Base>

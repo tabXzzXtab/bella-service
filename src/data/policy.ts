@@ -34,13 +34,6 @@ export interface CustomerPromise extends PolicyItem {
   moment: Text;
 }
 
-export const policyMeta = {
-  version: '1.0',
-  /** ISO date; formatted per locale where it is shown. */
-  date: '2026-09-28',
-  approvedBy: 'Kim Öhlander',
-} as const;
-
 export const policyIntro: Text[] = [
   {
     sv: 'I allt vi gör vill vi överträffa våra kunders förväntningar och erbjuda ett mervärde. Och våra medarbetare är vår viktigaste resurs för att leverera detta.',
@@ -173,6 +166,12 @@ export const ethics = {
   lead: {
     sv: 'Bella Service AB:s etiska regler är grunden för vår existens och gäller alla anställda, i all verksamhet, i alla situationer, överallt och alltid.',
     en: 'Bella Service AB’s ethical rules are the foundation of our existence. They apply to every employee, in all our work, in every situation, everywhere and always.',
+  } satisfies Text,
+
+  /** The scope sentence of the lead, on its own, for the hero summary. */
+  scope: {
+    sv: 'Gäller alla anställda, i all verksamhet, i alla situationer. Överallt och alltid.',
+    en: 'For every employee, in all our work, in every situation. Everywhere, always.',
   } satisfies Text,
 
   /** The document's zero-tolerance list, word for word. */
