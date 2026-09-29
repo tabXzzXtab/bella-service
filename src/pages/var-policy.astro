@@ -1,0 +1,12 @@
+---
+import Base from '../layouts/Base.astro';
+import PolicyPage from '../components/pages/PolicyPage.astro';
+import { useTranslations } from '../i18n/utils';
+
+const locale = 'sv' as const;
+const t = useTranslations(locale);
+---
+
+<Base title={t('policy.title')} description={t('policy.description')}>
+  <PolicyPage locale={locale} />
+</Base>

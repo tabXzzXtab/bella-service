@@ -35,19 +35,21 @@ export const ROUTES = {
   home: { sv: '', en: '' },
   services: { sv: 'tjanster', en: 'services' },
   process: { sv: 'sa-gar-det-till', en: 'how-it-works' },
+  policy: { sv: 'var-policy', en: 'our-policy' },
   contact: { sv: 'kontakt', en: 'contact' },
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type RouteKey = keyof typeof ROUTES;
 
 /**
- * Main navigation, in order. Three pages, because that is the site structure
- * in Bussiness-info.md — resist adding a fourth without the client asking.
+ * Main navigation, in order. The policy page was added at the client's
+ * request; resist adding more without the client asking.
  */
 export const NAV_ORDER = [
   'home',
   'services',
   'process',
+  'policy',
   'contact',
 ] as const satisfies readonly RouteKey[];
 

@@ -21,6 +21,7 @@ const sv = {
   'nav.home': 'Hem',
   'nav.services': 'Tjänster',
   'nav.process': 'Så går det till',
+  'nav.policy': 'Vår policy',
   'nav.contact': 'Kontakt',
   'nav.menu': 'Meny',
   'nav.openMenu': 'Öppna menyn',
@@ -100,6 +101,36 @@ const sv = {
   'process.stats.title': 'Det här har vi gjort förut',
   'process.cta.title': 'Undrar du vad ditt tak behöver?',
   'process.cta.lead': 'Vi tittar på det kostnadsfritt och säger som det är.',
+
+  // --- Policy page --------------------------------------------------------
+  // Chrome only. The policy text itself lives in src/data/policy.ts, from the
+  // client's 1Arbetsmiljöpolysi.docx.
+  'policy.title': 'Vår policy',
+  'policy.description':
+    'Bella Service AB:s företagspolicy: arbetsmiljö, kvalitet och säkerhet, miljö, etik och hur vi uppträder hemma hos dig.',
+  'policy.hero.eyebrow': 'Vår policy',
+  'policy.hero.title': 'En vägvisare för ett bättre företag',
+  'policy.doc.label': 'Dokumentet',
+  'policy.doc.version': 'Version',
+  'policy.doc.date': 'Fastställd',
+  'policy.doc.approvedBy': 'Godkänd av',
+  'policy.doc.commitments': 'åtaganden',
+  'policy.doc.promises': 'löften hos kunden',
+  'policy.doc.zero': 'tolerans för mutor',
+  'policy.nav.label': 'Kapitel',
+  'policy.nav.ethics': 'Etik',
+  'policy.nav.customer': 'Hos kunden',
+  'policy.company.label': 'Företagspolicy',
+  'policy.company.title': 'Tre saker vi ska säkerställa',
+  'policy.company.intro': 'Vi ska säkerställa att:',
+  'policy.ethics.label': 'Etikpolicy',
+  'policy.ethics.zero': 'Nolltolerans',
+  'policy.ethics.zeroLead': 'Det här förekommer inte hos oss. Inte ens lite.',
+  'policy.customer.label': 'Kundpolicy',
+  'policy.customer.title': 'När vi är hemma hos dig',
+  'policy.customer.lead': 'Fem saker du kan räkna med, varje gång.',
+  'policy.cta.title': 'Vill du veta mer om hur vi arbetar?',
+  'policy.cta.lead': 'Hör av dig, så berättar vi. Besiktningen är kostnadsfri.',
 
   // --- Price request ------------------------------------------------------
   // No figures anywhere in here. The panel collects a service and a size and
@@ -214,6 +245,7 @@ const en: Record<UIKey, string> = {
   'nav.home': 'Home',
   'nav.services': 'Services',
   'nav.process': 'How it works',
+  'nav.policy': 'Our policy',
   'nav.contact': 'Contact',
   'nav.menu': 'Menu',
   'nav.openMenu': 'Open menu',
@@ -292,6 +324,34 @@ const en: Record<UIKey, string> = {
   'process.stats.title': 'What we have done before',
   'process.cta.title': 'Wondering what your roof needs?',
   'process.cta.lead': 'We will look at it free of charge and tell you straight.',
+
+  // --- Policy page --------------------------------------------------------
+  'policy.title': 'Our policy',
+  'policy.description':
+    'The Bella Service AB company policy: work environment, quality and safety, environment, ethics, and how we behave in your home.',
+  'policy.hero.eyebrow': 'Our policy',
+  'policy.hero.title': 'A guide to being a better company',
+  'policy.doc.label': 'The document',
+  'policy.doc.version': 'Version',
+  'policy.doc.date': 'Adopted',
+  'policy.doc.approvedBy': 'Approved by',
+  'policy.doc.commitments': 'commitments',
+  'policy.doc.promises': 'promises at your home',
+  'policy.doc.zero': 'tolerance for bribery',
+  'policy.nav.label': 'Chapters',
+  'policy.nav.ethics': 'Ethics',
+  'policy.nav.customer': 'At your home',
+  'policy.company.label': 'Company policy',
+  'policy.company.title': 'Three things we make sure of',
+  'policy.company.intro': 'We make sure that:',
+  'policy.ethics.label': 'Ethics policy',
+  'policy.ethics.zero': 'Zero tolerance',
+  'policy.ethics.zeroLead': 'None of this happens here. Not even a little.',
+  'policy.customer.label': 'Customer policy',
+  'policy.customer.title': 'When we are at your home',
+  'policy.customer.lead': 'Five things you can count on, every time.',
+  'policy.cta.title': 'Want to know more about how we work?',
+  'policy.cta.lead': 'Get in touch and we will tell you. The inspection is free.',
 
   // --- Price request ------------------------------------------------------
   'priceRequest.eyebrow': 'Price request',

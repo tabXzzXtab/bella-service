@@ -27,6 +27,7 @@ const NAV_LABEL: Record<RouteKey, UIKey> = {
   home: 'nav.home',
   services: 'nav.services',
   process: 'nav.process',
+  policy: 'nav.policy',
   contact: 'nav.contact',
 };
 
@@ -120,6 +121,9 @@ const current = routeKeyFromPath(Astro.url.pathname);
     margin-inline-end: auto;
   }
 
+  /* Five pages since the policy page arrived: the row needs about 68rem
+     before the Swedish labels stop wrapping, so the menu toggle holds until
+     then. */
   .hdr-nav {
     display: none;
     align-items: center;
@@ -131,6 +135,7 @@ const current = routeKeyFromPath(Astro.url.pathname);
     font-size: 0.9375rem;
     font-weight: 450;
     letter-spacing: -0.01em;
+    white-space: nowrap;
     text-decoration: none;
     color: var(--ink-soft);
     transition: color var(--dur-fast) var(--ease);
@@ -162,9 +167,10 @@ const current = routeKeyFromPath(Astro.url.pathname);
     display: none;
     align-items: center;
     gap: 1.25rem;
+    white-space: nowrap;
   }
 
-  @media (width >= 60rem) {
+  @media (width >= 68rem) {
     .hdr-nav,
     .hdr-actions {
       display: flex;
@@ -210,7 +216,7 @@ const current = routeKeyFromPath(Astro.url.pathname);
   /* Declared after .hdr-toggle's base rule on purpose: both selectors have the
      same specificity, so whichever comes last wins. With this above the base
      rule the toggle stayed visible on desktop beside the full nav. */
-  @media (width >= 60rem) {
+  @media (width >= 68rem) {
     .hdr-toggle {
       display: none;
     }
@@ -227,7 +233,7 @@ const current = routeKeyFromPath(Astro.url.pathname);
     display: none !important;
   }
 
-  @media (width >= 60rem) {
+  @media (width >= 68rem) {
     .hdr-panel {
       display: none !important;
     }
@@ -275,7 +281,7 @@ const current = routeKeyFromPath(Astro.url.pathname);
     toggle.addEventListener('click', () => setOpen(Boolean(panel.hidden)));
 
     // A resize past the desktop breakpoint would leave the panel orphaned open.
-    window.matchMedia('(width >= 60rem)').addEventListener('change', (event) => {
+    window.matchMedia('(width >= 68rem)').addEventListener('change', (event) => {
       if (event.matches) setOpen(false);
     });
 
