@@ -269,17 +269,45 @@ const pad = (n: number) => String(n).padStart(2, '0');
   .pl-hero-copy {
     display: grid;
     gap: 1.25rem;
+
+    /* One number takes the whole block down: the eyebrow, the heading and both
+       paragraphs are all sized against it, so they shrink in step instead of
+       drifting out of proportion with each other. The sizes either side of the
+       multiplier are the site's own — global.css for the heading and the
+       eyebrow, the .lead scale for the first paragraph — restated here only
+       because `font-size` in `em` or `%` measures the parent, which would
+       throw away the clamp rather than scale it.
+
+       1 below the breakpoint. The block only outgrows its surroundings once it
+       is sharing a row with the photo panel; on a phone it has the column to
+       itself, and scaling it there would take the two paragraphs down to 13px
+       and 12px. */
+    --pl-hero-scale: 1;
+  }
+
+  @media (width >= 56rem) {
+    .pl-hero-copy {
+      --pl-hero-scale: 0.8;
+    }
+  }
+
+  .pl-hero-copy .label {
+    font-size: calc(0.9375rem * var(--pl-hero-scale));
+  }
+
+  .pl-hero-copy h1 {
+    font-size: calc(clamp(2.5rem, 6.2vw, 4.75rem) * var(--pl-hero-scale));
   }
 
   .pl-hero-lead {
-    font-size: clamp(1.0625rem, 1.4vw, 1.3125rem);
+    font-size: calc(clamp(1.0625rem, 1.4vw, 1.3125rem) * var(--pl-hero-scale));
     line-height: 1.5;
     letter-spacing: -0.012em;
     max-width: 44ch;
   }
 
   .pl-hero-sub {
-    font-size: 0.9375rem;
+    font-size: calc(0.9375rem * var(--pl-hero-scale));
     max-width: 52ch;
   }
 
