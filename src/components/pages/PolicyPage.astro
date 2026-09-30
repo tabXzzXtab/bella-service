@@ -259,7 +259,9 @@ const pad = (n: number) => String(n).padStart(2, '0');
   @media (width >= 56rem) {
     .pl-hero-inner {
       grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-      align-items: end;
+      /* The copy sits level with the middle of the photo frame, not at its
+         foot. */
+      align-items: center;
       gap: 5rem;
     }
   }

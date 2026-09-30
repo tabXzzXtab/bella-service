@@ -156,8 +156,9 @@ export const site = {
 /**
  * Headline numbers on the start page.
  *
- * ⚠ "100% nöjda kunder" and "40 000+ tak tvättade" are absolute claims supplied
- * by the client. Swedish marknadsföringslagen requires them to be substantiable
+ * ⚠ "100% nöjda kunder" is an absolute claim supplied by the client, as is
+ * "1 000 projekt utförda" (which replaced "40 000+ tak tvättade" at the
+ * client's request, 2026-09-29). Swedish marknadsföringslagen requires them to be substantiable
  * on demand. Confirm what backs them before launch, or soften the wording.
  */
 export const stats = [
@@ -167,9 +168,9 @@ export const stats = [
     label: { sv: 'år i branschen', en: 'years in the trade' },
   },
   {
-    id: 'roofs',
-    value: '40 000+',
-    label: { sv: 'tak tvättade', en: 'roofs cleaned' },
+    id: 'projects',
+    value: '1 000',
+    label: { sv: 'projekt utförda', en: 'projects completed' },
   },
   {
     id: 'satisfaction',

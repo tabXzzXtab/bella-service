@@ -60,7 +60,7 @@ One semantic DOM, four art directions, switchable live at runtime.
 
 ## Claims that may not be published unverified
 
-- **"100% nöjda kunder"** and **"40 000+ tak tvättade"** are absolute marketing
+- **"100% nöjda kunder"** and **"1 000 projekt utförda"** are absolute marketing
   claims. Swedish marknadsföringslagen requires the advertiser to substantiate
   them on demand. They are in the copy because the client supplied them; confirm
   what backs them before launch.
